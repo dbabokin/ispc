@@ -91,17 +91,22 @@ static void usage(int ret) {
     printf("    [--addressing={32,64}]\t\tSelect 32- or 64-bit addressing. (Note that 32-bit\n");
     printf("                          \t\taddressing calculations are done by default, even\n");
     printf("                          \t\ton 64-bit target architectures.)\n");
+#ifndef ISPC_PS4
     printf("    [--arch={%s}]\t\tSelect target architecture\n", Target::SupportedArchs());
+#endif
     printf("    [--c++-include-file=<name>]\t\tSpecify name of file to emit in #include statement in generated C++ "
            "code.\n");
 #ifndef ISPC_IS_WINDOWS
     printf("    [--colored-output]\t\tAlways use terminal colors in error/warning messages.\n");
 #endif
+#ifndef ISPC_PS4
+    // Do not allow set cpu for PS4 build
     printf("    ");
     char cpuHelp[2048];
     snprintf(cpuHelp, sizeof(cpuHelp), "[--cpu=<cpu>]\t\t\tSelect target CPU type\n<cpu>={%s}\n",
              Target::SupportedCPUs().c_str());
     PrintWithWordBreaks(cpuHelp, 16, TerminalWidth(), stdout);
+#endif
     printf("    [-D<foo>]\t\t\t\t#define given value when running preprocessor\n");
     printf("    [--dev-stub <filename>]\t\tEmit device-side offload stub functions to file\n");
 #ifdef ISPC_IS_WINDOWS
@@ -464,6 +469,10 @@ int main(int Argc, char *Argv[]) {
     Module::OutputFlags flags = Module::NoFlags;
     const char *arch = NULL, *cpu = NULL, *target = NULL, *intelAsmSyntax = NULL;
 
+#ifdef ISPC_PS4
+    cpu = "btver2";
+#endif
+
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--help"))
             usage(0);
@@ -484,9 +493,7 @@ int main(int Argc, char *Argv[]) {
                         argv[i] + 13);
                 usage(1);
             }
-        } else if (!strncmp(argv[i], "--arch=", 7))
-            arch = argv[i] + 7;
-        else if (!strncmp(argv[i], "--x86-asm-syntax=", 17)) {
+        } else if (!strncmp(argv[i], "--x86-asm-syntax=", 17)) {
             intelAsmSyntax = argv[i] + 17;
             if (!((std::string(intelAsmSyntax) == "intel") || (std::string(intelAsmSyntax) == "att"))) {
                 intelAsmSyntax = NULL;
@@ -495,8 +502,14 @@ int main(int Argc, char *Argv[]) {
                         "only intel and att are allowed.\n",
                         argv[i] + 17);
             }
-        } else if (!strncmp(argv[i], "--cpu=", 6))
+        }
+#ifndef ISPC_PS4
+        // Do not allow to set arch and cpu for PS4 build, they are pre-defined.
+        else if (!strncmp(argv[i], "--arch=", 7))
+            arch = argv[i] + 7;
+        else if (!strncmp(argv[i], "--cpu=", 6))
             cpu = argv[i] + 6;
+#endif
         else if (!strcmp(argv[i], "--fast-math")) {
             fprintf(stderr, "--fast-math option has been renamed to --opt=fast-math!\n");
             usage(1);

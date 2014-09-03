@@ -235,6 +235,11 @@ typedef enum {
     // Late Core2-like. Supports SSE 4.2 + POPCNT/LZCNT.
     CPU_Nehalem,
 
+#ifdef ISPC_PS4
+    // CPU in PS4/Xbox One.
+    CPU_PS4,
+#endif
+
     // Sandy Bridge. Supports AVX 1.
     CPU_SandyBridge,
 
@@ -336,6 +341,11 @@ class AllCPUs {
         names[CPU_Nehalem].push_back("corei7");
         names[CPU_Nehalem].push_back("nehalem");
 
+#ifdef ISPC_PS4
+        // Google suggests that it's CPU code name, which triggers best code gen for PS4.
+        names[CPU_PS4].push_back("btver2");
+#endif
+
         names[CPU_SandyBridge].push_back("corei7-avx");
         names[CPU_SandyBridge].push_back("sandybridge");
 
@@ -397,6 +407,11 @@ class AllCPUs {
                                     CPU_Silvermont, CPU_SandyBridge, CPU_IvyBridge, CPU_None);
         compat[CPU_SandyBridge] = Set(CPU_Generic, CPU_x86_64, CPU_Bonnell, CPU_Penryn, CPU_Core2, CPU_Nehalem,
                                       CPU_Silvermont, CPU_SandyBridge, CPU_None);
+#ifdef ISPC_PS4
+        compat[CPU_PS4] =
+            Set(CPU_Generic, CPU_Bonnell, CPU_Penryn, CPU_Core2, CPU_Nehalem, CPU_Silvermont, CPU_SandyBridge, CPU_PS4,
+                CPU_None);
+#endif
         compat[CPU_Nehalem] =
             Set(CPU_Generic, CPU_x86_64, CPU_Bonnell, CPU_Penryn, CPU_Core2, CPU_Nehalem, CPU_Silvermont, CPU_None);
         compat[CPU_Penryn] =
@@ -547,6 +562,11 @@ Target::Target(const char *arch, const char *cpu, const char *isa, bool pic, boo
             isa = "sse4-i32x4";
             break;
 
+#ifdef ISPC_PS4
+        case CPU_PS4:
+            isa = "avx1-i32x4";
+            break;
+#endif
         default:
             isa = "sse2-i32x4";
             break;
