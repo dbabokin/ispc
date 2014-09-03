@@ -94,11 +94,14 @@ usage(int ret) {
 #ifndef ISPC_IS_WINDOWS
     printf("    [--colored-output]\t\tAlways use terminal colors in error/warning messages.\n");
 #endif
+#ifndef ISPC_PS4
+    // Do not allow set cpu for PS4 build
     printf("    ");
     char cpuHelp[2048];
     sprintf(cpuHelp, "[--cpu=<cpu>]\t\t\tSelect target CPU type\n<cpu>={%s}\n",
             Target::SupportedCPUs().c_str());
     PrintWithWordBreaks(cpuHelp, 16, TerminalWidth(), stdout);
+#endif
     printf("    [-D<foo>]\t\t\t\t#define given value when running preprocessor\n");
     printf("    [--dev-stub <filename>]\t\tEmit device-side offload stub functions to file\n");
 #ifdef ISPC_IS_WINDOWS
@@ -352,6 +355,10 @@ int main(int Argc, char *Argv[]) {
     bool generatePIC = false;
     const char *arch = NULL, *cpu = NULL, *target = NULL;
 
+#ifdef ISPC_PS4
+    cpu = "btver2";
+#endif
+
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--help"))
             usage(0);
@@ -373,8 +380,11 @@ int main(int Argc, char *Argv[]) {
         }
         else if (!strncmp(argv[i], "--arch=", 7))
             arch = argv[i] + 7;
+#ifndef ISPC_PS4
+        // Do not allow set cpu for PS4 build
         else if (!strncmp(argv[i], "--cpu=", 6))
             cpu = argv[i] + 6;
+#endif
         else if (!strcmp(argv[i], "--fast-math")) {
             fprintf(stderr, "--fast-math option has been renamed to --opt=fast-math!\n");
             usage(1);
