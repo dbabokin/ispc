@@ -407,7 +407,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>NOMINMAX;%LLVM_VERSION%</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ISPC_PS4;NOMINMAX;%LLVM_VERSION%</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(LLVM_INSTALL_DIR)\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146;4800;4996;4355;4624;4244;4141;4291;4018</DisableSpecificWarnings>
     </ClCompile>
@@ -430,7 +430,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NOMINMAX;%LLVM_VERSION%;NDEBUG</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ISPC_PS4;NOMINMAX;%LLVM_VERSION%;NDEBUG</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(LLVM_INSTALL_DIR)\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4146;4800;4996;4355;4624;4244;4141;4291;4018</DisableSpecificWarnings>
     </ClCompile>
