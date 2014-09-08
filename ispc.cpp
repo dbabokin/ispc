@@ -1255,6 +1255,11 @@ Target::GetTripleString() const {
     else
 #endif
     {
+#ifdef ISPC_PS4
+        // This seem to be the correct value for PS4.
+        // TODO: disable 32/64 architecture selection in driver for PS4.
+        triple.setTriple("x86_64-unknown-freebsd");
+#else
         // Start with the host triple as the default
         triple.setTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -1274,6 +1279,7 @@ Target::GetTripleString() const {
 #endif /* ISPC_NVPTX_ENABLED */
         else
             triple.setArchName(m_arch);
+#endif
     }
     return triple.str();
 }
