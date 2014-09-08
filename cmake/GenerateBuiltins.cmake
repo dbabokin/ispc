@@ -82,9 +82,17 @@ endfunction()
 function(builtin_to_cpp bit resultFileName)
     set(inputFilePath builtins/builtins.c)
     set(output ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/builtins-c-${bit}.cpp)
+    set(target "")
+    set(includes "")
+    if(ISPC_PS4)
+        # Cygwin package "cygwin-devel" needs to be installed.
+        # It's needed for a include of unistd.h
+        set(target "--target=i386-scei-freebsd")
+        set(includes "-IC:/cygwin64/usr/include")
+    endif()
     add_custom_command(
         OUTPUT ${output}
-        COMMAND ${CLANG_EXECUTABLE} -m${bit} -emit-llvm -c ${inputFilePath} -o - | \"${LLVM_DIS_EXECUTABLE}\" -
+        COMMAND ${CLANG_EXECUTABLE} ${target} ${includes} -m${bit} -emit-llvm -c ${inputFilePath} -o - | \"${LLVM_DIS_EXECUTABLE}\" -
             | \"${PYTHON_EXECUTABLE}\" bitcode2cpp.py c ${bit} --llvm_as ${LLVM_AS_EXECUTABLE}
             > ${output}
         DEPENDS ${inputFilePath}

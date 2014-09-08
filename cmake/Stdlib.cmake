@@ -35,9 +35,13 @@
 #
 function(create_stdlib mask outputPath)
     set(output ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/stdlib_mask${mask}_ispc.cpp)
+    set(target "")
+    if(ISPC_PS4)
+        set(target "--target=i386-scei-freebsd")
+    endif()
     add_custom_command(
         OUTPUT ${output}
-        COMMAND ${CLANG_EXECUTABLE} -E -x c -DISPC_MASK_BITS=${mask} -DISPC=1 -DPI=3.14159265358979
+        COMMAND ${CLANG_EXECUTABLE} ${target} -E -x c -DISPC_MASK_BITS=${mask} -DISPC=1 -DPI=3.14159265358979
             stdlib.ispc | \"${PYTHON_EXECUTABLE}\" stdlib2cpp.py mask${mask}
             > ${output}
         DEPENDS stdlib.ispc

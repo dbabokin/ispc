@@ -1204,6 +1204,11 @@ std::string Target::GetTripleString() const {
     } else
 #endif
     {
+#ifdef ISPC_PS4
+        // This seem to be the correct value for PS4.
+        // NOTE: for LLVM before 3.7 x86_64-unknown-freebsd needsto be used.
+        triple.setTriple("x86_64-scei-ps4");
+#else
         // Start with the host triple as the default
         triple.setTriple(llvm::sys::getDefaultTargetTriple());
 
@@ -1223,6 +1228,7 @@ std::string Target::GetTripleString() const {
 #endif /* ISPC_NVPTX_ENABLED */
         else
             triple.setArchName(m_arch);
+#endif
     }
     return triple.str();
 }
