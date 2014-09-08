@@ -51,6 +51,7 @@ option(ISPC_INCLUDE_TESTS "Generate build targets for the ISPC tests." ON)
 option(ISPC_INCLUDE_UTILS "Generate build targets for the utils." ON)
 option(ISPC_PREPARE_PACKAGE "Generate build targets for ispc package" OFF)
 option(ISPC_NO_DUMPS "Turn off functionality, which requires LLVM dump() functions" OFF)
+option(ISPC_PS4 "Enable PS4 cross-build instead od regular Windows build" OFF)
 
 if (UNIX)
     option(ISPC_STATIC_STDCXX_LINK "Link statically with libstdc++ and libgcc" OFF)
