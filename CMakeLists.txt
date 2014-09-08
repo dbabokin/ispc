@@ -202,6 +202,10 @@ else()
     endif()
 endif()
 
+if (ISPC_PS4)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ISPC_PS4)
+endif()
+
 if (ARM_ENABLED)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ISPC_ARM_ENABLED)
 endif()
