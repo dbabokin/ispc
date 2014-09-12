@@ -88,8 +88,10 @@ usage(int ret) {
     printf("    [--addressing={32,64}]\t\tSelect 32- or 64-bit addressing. (Note that 32-bit\n");
     printf("                          \t\taddressing calculations are done by default, even\n");
     printf("                          \t\ton 64-bit target architectures.)\n");
+#ifndef ISPC_PS4
     printf("    [--arch={%s}]\t\tSelect target architecture\n",
            Target::SupportedArchs());
+#endif
     printf("    [--c++-include-file=<name>]\t\tSpecify name of file to emit in #include statement in generated C++ code.\n");
 #ifndef ISPC_IS_WINDOWS
     printf("    [--colored-output]\t\tAlways use terminal colors in error/warning messages.\n");
@@ -378,10 +380,11 @@ int main(int Argc, char *Argv[]) {
                 usage(1);
             }
         }
+
+// Do not allow to set arch and cpu for PS4 build, they are pre-defined.
+#ifndef ISPC_PS4
         else if (!strncmp(argv[i], "--arch=", 7))
             arch = argv[i] + 7;
-#ifndef ISPC_PS4
-        // Do not allow set cpu for PS4 build
         else if (!strncmp(argv[i], "--cpu=", 6))
             cpu = argv[i] + 6;
 #endif
