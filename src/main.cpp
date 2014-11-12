@@ -67,9 +67,15 @@
 
 static void lPrintVersion() {
 #ifdef ISPC_IS_WINDOWS
+#ifndef ISPC_PS4
     printf("Intel(r) SPMD Program Compiler (ispc), %s (build date %s, LLVM %s)\n"
            "Supported Visual Studio versions: %s.\n",
            ISPC_VERSION, BUILD_DATE, ISPC_LLVM_VERSION_STRING, ISPC_VS_VERSION);
+#else // PS4
+    printf("Intel(r) SPMD Program Compiler (ispc), %s, PS4 cross-compiler (build date %s, LLVM %s)\n"
+           "Supported Visual Studio versions: %s.\n",
+           ISPC_VERSION, BUILD_DATE, ISPC_LLVM_VERSION_STRING, ISPC_VS_VERSION);
+#endif // PS4
 #else
     printf("Intel(r) SPMD Program Compiler (ispc), %s (build %s @ %s, LLVM %s)\n", ISPC_VERSION, BUILD_VERSION,
            BUILD_DATE, ISPC_LLVM_VERSION_STRING);
