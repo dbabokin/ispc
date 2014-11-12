@@ -60,7 +60,11 @@
 
 static void
 lPrintVersion() {
+#ifndef ISPC_PS4
     printf("Intel(r) SPMD Program Compiler (ispc), %s (build %s @ %s, LLVM %s)\n",
+#else
+    printf("Intel(r) SPMD Program Compiler (ispc), %s, PS4 cross-compiler (build %s @ %s, LLVM %s)\n",
+#endif
            ISPC_VERSION, BUILD_VERSION, BUILD_DATE,
            ISPC_LLVM_VERSION_STRING
            );
