@@ -360,7 +360,11 @@ int main(int Argc, char *Argv[]) {
     g = new Globals;
 
     Module::OutputType ot = Module::Object;
+#ifdef ISPC_PS4
+    bool generatePIC = true;
+#else
     bool generatePIC = false;
+#endif
     const char *arch = NULL, *cpu = NULL, *target = NULL;
 
 #ifdef ISPC_PS4
