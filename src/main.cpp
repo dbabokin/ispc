@@ -473,6 +473,10 @@ int main(int Argc, char *Argv[]) {
 
     Module::OutputType ot = Module::Object;
     Module::OutputFlags flags = Module::NoFlags;
+#ifdef ISPC_PS4
+    // PS4 requires PIC to be always on.
+    flags |= Module::GeneratePIC;
+#endif
     const char *arch = NULL, *cpu = NULL, *target = NULL, *intelAsmSyntax = NULL;
 
 #ifdef ISPC_PS4
