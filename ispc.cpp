@@ -412,7 +412,9 @@ public:
                                       CPU_Core2, CPU_Nehalem, CPU_Silvermont,
                                       CPU_SandyBridge, CPU_None);
 #ifdef ISPC_PS4
-        compat[CPU_PS4]         = Set(CPU_PS4, CPU_None);
+        compat[CPU_PS4]         = Set(CPU_Generic, CPU_Bonnell, CPU_Penryn,
+                                      CPU_Core2, CPU_Nehalem, CPU_Silvermont,
+                                      CPU_SandyBridge, CPU_PS4, CPU_None);
 #endif
         compat[CPU_Nehalem]     = Set(CPU_Generic, CPU_Bonnell, CPU_Penryn,
                                       CPU_Core2, CPU_Nehalem, CPU_Silvermont,
