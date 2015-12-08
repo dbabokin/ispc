@@ -82,8 +82,8 @@
       <DisableSpecificWarnings>4146;4800;4996;4355;4624;4005;4065</DisableSpecificWarnings>
     </ClCompile>
     <CustomBuild Include="builtins\builtins.c">
-      <Command>%LLVM_INSTALL_DIR%\bin\clang --target=i386-unknown-freebsd -m32 -IC:\cygwin\usr\include -emit-llvm builtins\builtins.c -c -o - | %LLVM_INSTALL_DIR%\bin\llvm-dis - | python bitcode2cpp.py c 32 &gt; $(Configuration)/gen-bitcode-c-32.cpp;
-%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -m64 -IC:\cygwin\usr\include -emit-llvm builtins\builtins.c -c -o - | %LLVM_INSTALL_DIR%\bin\llvm-dis - | python bitcode2cpp.py c 64 &gt; $(Configuration)/gen-bitcode-c-64.cpp</Command>
+      <Command>%LLVM_INSTALL_DIR%\bin\clang --target=i386-scei-ps4 -m32 -IC:\cygwin\usr\include -emit-llvm builtins\builtins.c -c -o - | %LLVM_INSTALL_DIR%\bin\llvm-dis - | python bitcode2cpp.py c 32 &gt; $(Configuration)/gen-bitcode-c-32.cpp;
+%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -m64 -IC:\cygwin\usr\include -emit-llvm builtins\builtins.c -c -o - | %LLVM_INSTALL_DIR%\bin\llvm-dis - | python bitcode2cpp.py c 64 &gt; $(Configuration)/gen-bitcode-c-64.cpp</Command>
       <Message>Building builtins.c</Message>
       <Outputs>$(Configuration)/gen-bitcode-c-32.cpp;$(Configuration)/gen-bitcode-c-64.cpp</Outputs>
     </CustomBuild>
@@ -111,11 +111,11 @@
   <ItemGroup>
     <CustomBuild Include="stdlib.ispc">
       <FileType>Document</FileType>
-      <Command>%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -E -x c %(Filename).ispc -DISPC_MASK_BITS=1 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask1 &gt; $(Configuration)/gen-stdlib-mask1.cpp;
-%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -E -x c %(Filename).ispc -DISPC_MASK_BITS=8 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask8 &gt; $(Configuration)/gen-stdlib-mask8.cpp;
-%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -E -x c %(Filename).ispc -DISPC_MASK_BITS=16 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask16 &gt; $(Configuration)/gen-stdlib-mask16.cpp;
-%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -E -x c %(Filename).ispc -DISPC_MASK_BITS=32 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask32 &gt; $(Configuration)/gen-stdlib-mask32.cpp;
-%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-unknown-freebsd -E -x c %(Filename).ispc -DISPC_MASK_BITS=64 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask64 &gt; $(Configuration)/gen-stdlib-mask64.cpp;
+      <Command>%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -E -x c %(Filename).ispc -DISPC_MASK_BITS=1 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask1 &gt; $(Configuration)/gen-stdlib-mask1.cpp;
+%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -E -x c %(Filename).ispc -DISPC_MASK_BITS=8 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask8 &gt; $(Configuration)/gen-stdlib-mask8.cpp;
+%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -E -x c %(Filename).ispc -DISPC_MASK_BITS=16 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask16 &gt; $(Configuration)/gen-stdlib-mask16.cpp;
+%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -E -x c %(Filename).ispc -DISPC_MASK_BITS=32 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask32 &gt; $(Configuration)/gen-stdlib-mask32.cpp;
+%LLVM_INSTALL_DIR%\bin\clang --target=x86_64-scei-ps4 -E -x c %(Filename).ispc -DISPC_MASK_BITS=64 -DISPC=1 -DPI=3.14159265358979 | python stdlib2cpp.py mask64 &gt; $(Configuration)/gen-stdlib-mask64.cpp;
 </Command>
       <Outputs>$(Configuration)/gen-stdlib-mask1.cpp;$(Configuration)/gen-stdlib-mask8.cpp;$(Configuration)/gen-stdlib-mask16.cpp;$(Configuration)/gen-stdlib-mask32.cpp;$(Configuration)/gen-stdlib-mask64.cpp</Outputs>
       <Message>Building gen-stdlib-{mask1,8,16,32,64}.cpp</Message>
