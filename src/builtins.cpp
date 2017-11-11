@@ -1132,6 +1132,13 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
     bool runtime32 = g->target->is32Bit();
     bool warn = g->target->getISA() != Target::GENERIC;
 
+#ifdef ISPC_PS4
+    if (runtime32) {
+        Error(SourcePos(), "PS4 compiler doesn't support 32bit mode");
+        exit(1);
+    }
+#endif
+
 #define EXPORT_MODULE_COND_WARN(export_module, warnings)                                                               \
     extern unsigned char export_module[];                                                                              \
     extern int export_module##_length;                                                                                 \
@@ -1198,14 +1205,18 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 4:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_sse2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_sse2_64bit);
             }
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_sse2_x2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_sse2_x2_64bit);
             }
@@ -1219,19 +1230,23 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 4:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_sse4_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_sse4_64bit);
             }
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 if (g->target->getMaskBitCount() == 16) {
                     EXPORT_MODULE(builtins_bitcode_sse4_16_32bit);
                 } else {
                     Assert(g->target->getMaskBitCount() == 32);
                     EXPORT_MODULE(builtins_bitcode_sse4_x2_32bit);
                 }
+#endif
             } else {
                 if (g->target->getMaskBitCount() == 16) {
                     EXPORT_MODULE(builtins_bitcode_sse4_16_64bit);
@@ -1244,7 +1259,9 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         case 16:
             Assert(g->target->getMaskBitCount() == 8);
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_sse4_8_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_sse4_8_64bit);
             }
@@ -1268,13 +1285,17 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
                 // intrinsics, so we assume the implementation to be good
                 // enough at the moment.
                 if (runtime32) {
+#ifndef ISPC_PS4
                     EXPORT_MODULE(builtins_bitcode_sse4_32bit);
+#endif
                 } else {
                     EXPORT_MODULE(builtins_bitcode_sse4_64bit);
                 }
             } else if (g->target->getDataTypeWidth() == 64) {
                 if (runtime32) {
+#ifndef ISPC_PS4
                     EXPORT_MODULE(builtins_bitcode_avx1_i64x4_32bit);
+#endif
                 } else {
                     EXPORT_MODULE(builtins_bitcode_avx1_i64x4_64bit);
                 }
@@ -1284,14 +1305,18 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx1_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx1_64bit);
             }
             break;
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx1_x2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx1_x2_64bit);
             }
@@ -1305,21 +1330,27 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 4:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx11_i64x4_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx11_i64x4_64bit);
             }
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx11_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx11_64bit);
             }
             break;
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx11_x2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx11_x2_64bit);
             }
@@ -1333,21 +1364,27 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 4:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx2_i64x4_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx2_i64x4_64bit);
             }
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx2_64bit);
             }
             break;
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_avx2_x2_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_avx2_x2_64bit);
             }
@@ -1362,7 +1399,9 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_knl_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_knl_64bit);
             }
@@ -1385,7 +1424,9 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
             break;
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_skx_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_skx_64bit);
             }
@@ -1400,42 +1441,54 @@ void DefineStdlib(SymbolTable *symbolTable, llvm::LLVMContext *ctx, llvm::Module
         switch (g->target->getVectorWidth()) {
         case 4:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_4_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_4_64bit);
             }
             break;
         case 8:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_8_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_8_64bit);
             }
             break;
         case 16:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_16_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_16_64bit);
             }
             break;
         case 32:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_32_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_32_64bit);
             }
             break;
         case 64:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_64_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_64_64bit);
             }
             break;
         case 1:
             if (runtime32) {
+#ifndef ISPC_PS4
                 EXPORT_MODULE(builtins_bitcode_generic_1_32bit);
+#endif
             } else {
                 EXPORT_MODULE(builtins_bitcode_generic_1_64bit);
             }
