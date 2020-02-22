@@ -57,7 +57,6 @@
 
 
 // LLVM 5.0 is known not to generate some of expected instructions.
-// REQUIRES: LLVM_6_0+
 
 
 // AVX512F-LABEL: vaddps___
