@@ -25,7 +25,7 @@ jobs:
       shell: powershell
       run: |
         wget $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR
-        7z.exe e $env:LLVM_TAR 
+        7z.exe e ./$env:LLVM_TAR 
         echo "::add-path::$env:GITHUB_WORKSPACE/bin-$env:LLVM_VERSION/bin"
 
     - name: Check environment
