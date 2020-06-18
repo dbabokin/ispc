@@ -1,0 +1,56 @@
+# Nightly Linux run.
+
+name: Windows tests / LLVM 10.0
+
+# Run daily - test sse2-avx2 targets @ -O0/-O1/-O2
+on:
+  push:
+
+env:
+  LLVM_VERSION: "10.0"
+  LLVM_REPO: https://github.com/dbabokin/llvm-project
+  LLVM_TAR: llvm-10.0.0-win.vs2019-Release+Asserts-x86.arm.wasm.zip
+  SDE_TAR_NAME: sde-external-8.50.0-2020-03-26-win
+
+jobs:
+  win-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install dependencies
+      shell: powershell
+      run: |
+        wget $LLVM_REPO/releases/download/llvm-$LLVM_VERSION-ispc-dev/$LLVM_TAR
+        7z.exe e $LLVM_TAR 
+        echo "::add-path::${GITHUB_WORKSPACE}/bin-$LLVM_VERSION/bin"
+
+    - name: Check environment
+      shell: cmd
+      run: |
+        wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
+        echo %PATH%
+
+    - name: Build package
+      run: |
+        mkdir build && cd build
+        cmake .. -DISPC_PREPARE_PACKAGE=ON -DISPC_INCLUDE_BENCHMARKS=ON
+        make -j4 package
+
+    - name: Sanity testing (make check-all, make test)
+      run: |
+        cd build
+        bin/check_isa
+        bin/ispc --support-matrix
+        make check-all
+        make ispc_benchmarks && make test
+
+    - name: Upload package
+      uses: actions/upload-artifact@v2
+      with:
+        name: ispc_llvm10_linux
+        path: build/ispc-trunk-linux.tar.gz
+
