@@ -34,10 +34,9 @@ jobs:
       shell: cmd
       run: |
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
+        cinst winflexbison3
+        cinst gnuwin
         python ./check_env.py
-        C:\msys64\usr\bin\bison --version
-        C:\msys64\usr\bin\flex --version
-        C:\msys64\usr\bin\m4 --version
         echo %PATH%
 
     - name: Build package
