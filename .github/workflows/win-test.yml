@@ -27,7 +27,8 @@ jobs:
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR -OutFile $env:LLVM_TAR
         7z.exe x -t7z ./$env:LLVM_TAR 
-        echo "::add-path::$env:GITHUB_WORKSPACE/bin-$env:LLVM_VERSION/bin"
+        echo "::add-path::$env:GITHUB_WORKSPACE\bin-$env:LLVM_VERSION\bin"
+        echo "::add-path::C:\msys64\usr\bin"
 
     - name: Check environment
       shell: cmd
@@ -35,8 +36,6 @@ jobs:
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
         python ./check_env.py
         echo %PATH%
-        dir C:\msys64
-        dir C:\msys64\usr\bin
 
     - name: Build package
       run: |
