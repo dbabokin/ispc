@@ -28,13 +28,16 @@ jobs:
         Invoke-WebRequest $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR -OutFile $env:LLVM_TAR
         7z.exe x -t7z ./$env:LLVM_TAR 
         echo "::add-path::$env:GITHUB_WORKSPACE\bin-$env:LLVM_VERSION\bin"
-        echo "::add-path::C:\msys64\usr\bin"
+        #echo "::add-path::C:\msys64\usr\bin"
 
     - name: Check environment
       shell: cmd
       run: |
         wmic cpu get caption, deviceid, name, numberofcores, maxclockspeed, status
         python ./check_env.py
+        C:\msys64\usr\bin\bison --version
+        C:\msys64\usr\bin\flex --version
+        C:\msys64\usr\bin\m4 --version
         echo %PATH%
 
     - name: Build package
