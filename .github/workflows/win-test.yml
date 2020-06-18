@@ -24,9 +24,9 @@ jobs:
     - name: Install dependencies
       shell: powershell
       run: |
-        wget $LLVM_REPO/releases/download/llvm-$LLVM_VERSION-ispc-dev/$LLVM_TAR
+        wget $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR
         7z.exe e $LLVM_TAR 
-        echo "::add-path::${GITHUB_WORKSPACE}/bin-$LLVM_VERSION/bin"
+        echo "::add-path::$env:GITHUB_WORKSPACE/bin-$env:LLVM_VERSION/bin"
 
     - name: Check environment
       shell: cmd
