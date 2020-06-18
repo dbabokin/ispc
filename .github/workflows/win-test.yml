@@ -21,12 +21,6 @@ jobs:
       with:
         submodules: true
 
-    - name: bash
-      shell: bash
-      run: |
-        wget $LLVM_REPO/releases/download/llvm-$LLVM_VERSION-ispc-dev/$LLVM_TAR
-        ls
-
     - name: Install dependencies
       shell: powershell
       run: |
