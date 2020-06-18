@@ -26,7 +26,7 @@ jobs:
       run: |
         $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR -OutFile $env:LLVM_TAR
-        7z.exe e -t7z ./$env:LLVM_TAR 
+        7z.exe x -t7z ./$env:LLVM_TAR 
         echo "::add-path::$env:GITHUB_WORKSPACE/bin-$env:LLVM_VERSION/bin"
 
     - name: Check environment
