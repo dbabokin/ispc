@@ -21,10 +21,16 @@ jobs:
       with:
         submodules: true
 
+    - name: bash
+      shell: bash
+      run: |
+        wget $LLVM_REPO/releases/download/llvm-$LLVM_VERSION-ispc-dev/$LLVM_TAR
+        ls
+
     - name: Install dependencies
       shell: powershell
       run: |
-        wget $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR
+        Invoke-WebRequest wget $env:LLVM_REPO/releases/download/llvm-$env:LLVM_VERSION-ispc-dev/$env:LLVM_TAR -OutFile $env:LLVM_TAR
         7z.exe e ./$env:LLVM_TAR 
         echo "::add-path::$env:GITHUB_WORKSPACE/bin-$env:LLVM_VERSION/bin"
 
