@@ -1976,6 +1976,20 @@ define void @__prefetch_read_uniform_nt(i8 *) alwaysinline {
   ret void
 }
 
+define void @__prefetchw_uniform(i8 *) alwaysinline {
+  call void @llvm.prefetch(i8 * %0, i32 1, i32 3, i32 1)
+  ret void
+}
+
+define void @__prefetchw_varying(<WIDTH x i64> %addr, <WIDTH x MASK> %mask) alwaysinline {
+  per_lane(WIDTH, <WIDTH x MASK> %mask, `
+  %iptr_LANE_ID = extractelement <WIDTH x i64> %addr, i32 LANE
+  %ptr_LANE_ID = inttoptr i64 %iptr_LANE_ID to i8*
+  call void @llvm.prefetch(i8 * %ptr_LANE_ID, i32 1, i32 3, i32 1)
+  ')
+  ret void
+}
+
 define void @__prefetch_read_varying_1(<WIDTH x i64> %addr, <WIDTH x MASK> %mask) alwaysinline {
   per_lane(WIDTH, <WIDTH x MASK> %mask, `
   %iptr_LANE_ID = extractelement <WIDTH x i64> %addr, i32 LANE

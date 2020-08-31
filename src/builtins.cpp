@@ -558,6 +558,8 @@ static void lSetInternalFunctions(llvm::Module *module) {
         "__pseudo_prefetch_read_varying_2",
         "__pseudo_prefetch_read_varying_3",
         "__pseudo_prefetch_read_varying_nt",
+        "__prefetchw_uniform",
+        "__prefetchw_varying",
         "__psubs_ui8",
         "__psubs_ui16",
         "__psubs_ui32",

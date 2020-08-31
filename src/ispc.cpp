@@ -827,6 +827,7 @@ Target::Target(Arch arch, const char *cpu, ISPCTarget ispc_target, bool pic, boo
         this->m_hasRand = true;
         this->m_hasGather = true;
         CPUfromISA = CPU_Haswell;
+        this->m_funcAttributes.push_back(std::make_pair("target-features", "+prefetchwt1"));
         break;
     case ISPCTarget::avx2_i32x16:
         this->m_isa = Target::AVX2;

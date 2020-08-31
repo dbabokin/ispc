@@ -1033,6 +1033,17 @@ static inline void prefetch_nt(const void * varying ptr) {
     __pseudo_prefetch_read_varying_nt((int64)ptr, (IntMaskType)__mask);
 }
 
+__declspec(safe,cost1)
+static inline void prefetchw(const void * uniform ptr) {
+    __prefetchw_uniform((uniform int8 * uniform)ptr);
+}
+
+__declspec(safe,cost1)
+static inline void prefetchw(const void * varying ptr) {
+    __prefetchw_varying((int64)ptr, (IntMaskType)__mask);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // non-short-circuiting alternatives
 
