@@ -6730,10 +6730,12 @@ define <WIDTH x $1>
 define(`gen_scatter', `
 ;; Define the function that descripes the work to do to scatter a single
 ;; value
-define void @__scatter_elt32_$1(i8 * %ptr, <WIDTH x i32> %offsets, i32 %offset_scale,
+define void @__scatter_elt32_$1(i8 * %ptr, i32 * %offsets_ptr, i32 %offset_scale,
                                 <WIDTH x i32> %offset_delta, <WIDTH x $1> %values,
                                 i32 %lane) nounwind alwaysinline {
-  %offset32 = extractelement <WIDTH x i32> %offsets, i32 %lane
+
+  %offset32_ptr = getelementptr PTR_OP_ARGS(`i32') %offsets_ptr, i32 %lane
+  %offset32 = load volatile PTR_OP_ARGS(`i32') %offset32_ptr
   ; the order and details of the next 4 lines are important--they match LLVMs 
   ; patterns that apply the free x86 2x/4x/8x scaling in addressing calculations
   %offset64 = sext i32 %offset32 to i64
@@ -6774,8 +6776,11 @@ define void @__scatter_factored_base_offsets32_$1(i8* %base, <WIDTH x i32> %offs
                                          <WIDTH x i32> %offset_delta, <WIDTH x $1> %values,
                                          <WIDTH x MASK> %mask) nounwind alwaysinline {
   ;; And use the `per_lane' macro to do all of the per-lane work for scatter...
+  %offsets_ptr = alloca <WIDTH x i32>
+  store <WIDTH x i32> %offsets, <WIDTH x i32> * %offsets_ptr
+  %offsets_ptr2 = bitcast <WIDTH x i32> * %offsets_ptr to i32 *
   per_lane(WIDTH, <WIDTH x MASK> %mask, `
-      call void @__scatter_elt32_$1(i8 * %base, <WIDTH x i32> %offsets, i32 %offset_scale,
+      call void @__scatter_elt32_$1(i8 * %base, i32 * %offsets_ptr2, i32 %offset_scale,
                                     <WIDTH x i32> %offset_delta, <WIDTH x $1> %values, i32 LANE)')
   ret void
 }
