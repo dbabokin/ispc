@@ -6737,7 +6737,7 @@ define void @__scatter_elt32_$1(i8 * %ptr, i32 * %offsets_ptr, <WIDTH x $1> %val
   %offset32 = load volatile PTR_OP_ARGS(`i32') %offset32_ptr
   ; the order and details of the next 4 lines are important--they match LLVMs 
   ; patterns that apply the free x86 2x/4x/8x scaling in addressing calculations
-  %offset64 = sext i32 %offset32 to i64
+  %offset64 = zext i32 %offset32 to i64
   %finalptr = getelementptr PTR_OP_ARGS(`i8') %ptr, i64 %offset64
 
   %ptrcast = bitcast i8 * %finalptr to $1 *
