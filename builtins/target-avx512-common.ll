@@ -31,7 +31,6 @@
 
 define(`MASK',`i1')
 define(`HAVE_GATHER',`1')
-define(`HAVE_SCATTER',`1')
 
 include(`target-avx512-utils.ll')
 
@@ -813,94 +812,21 @@ define void @__scatter_base_offsets64_$1(i8* %ptr, i32 %scale, <WIDTH x i64> %of
 ')
 
 ;; scatter - i8
-scatterbo32_64(i8)
 gen_scatter(i8)
 
 ;; scatter - i16
-scatterbo32_64(i16)
 gen_scatter(i16)
 
 ;; scatter - i32
-declare void @llvm.x86.avx512.scatter.dpi.512 (i8*, i16, <16 x i32>, <16 x i32>, i32)
-define void 
-@__scatter_base_offsets32_i32(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x i32> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %mask = call i16 @__cast_mask_to_i16 (<WIDTH x MASK> %vecmask)
-
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.dpi.512, 16, vals, i32, ptr, offsets, i32, mask, i16, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.scatter.qpi.512 (i8*, i8, <8 x i64>, <8 x i32>, i32)
-define void 
-@__scatter_base_offsets64_i32(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x i32> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %mask = call i16 @__cast_mask_to_i16 (<WIDTH x MASK> %vecmask)
-  %mask_shifted = lshr i16 %mask, 8
-  %mask_lo = trunc i16 %mask to i8 
-  %mask_hi = trunc i16 %mask_shifted to i8 
-  %offsets_lo = shufflevector <16 x i64> %offsets, <16 x i64> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %offsets_hi = shufflevector <16 x i64> %offsets, <16 x i64> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15> 
-  %res_lo = shufflevector <16 x i32> %vals, <16 x i32> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %res_hi = shufflevector <16 x i32> %vals, <16 x i32> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.qpi.512, 8, res_lo, i32, ptr, offsets_lo, i64, mask_lo, i8, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.qpi.512, 8, res_hi, i32, ptr, offsets_hi, i64, mask_hi, i8, offset_scale);
-  ret void
-} 
-
-define void 
-@__scatter32_i32(<16 x i32> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_i32(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void 
-@__scatter64_i32(<16 x i64> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_i32(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(i32)
 
 ;; scatter - i64
-scatterbo32_64(i64)
 gen_scatter(i64)
 
 ;; scatter - float
-declare void @llvm.x86.avx512.scatter.dps.512 (i8*, i16, <16 x i32>, <16 x float>, i32)
-define void 
-@__scatter_base_offsets32_float(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x float> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %mask = call i16 @__cast_mask_to_i16 (<WIDTH x MASK> %vecmask)
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.dps.512, 16, vals, float, ptr, offsets, i32, mask, i16, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.scatter.qps.512 (i8*, i8, <8 x i64>, <8 x float>, i32)
-define void 
-@__scatter_base_offsets64_float(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x float> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %mask = call i16 @__cast_mask_to_i16 (<WIDTH x MASK> %vecmask)
-  %mask_shifted = lshr i16 %mask, 8
-  %mask_lo = trunc i16 %mask to i8 
-  %mask_hi = trunc i16 %mask_shifted to i8 
-  %offsets_lo = shufflevector <16 x i64> %offsets, <16 x i64> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %offsets_hi = shufflevector <16 x i64> %offsets, <16 x i64> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15> 
-  %res_lo = shufflevector <16 x float> %vals, <16 x float> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %res_hi = shufflevector <16 x float> %vals, <16 x float> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.qps.512, 8, res_lo, float, ptr, offsets_lo, i64, mask_lo, i8, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.scatter.qps.512, 8, res_hi, float, ptr, offsets_hi, i64, mask_hi, i8, offset_scale);
-  ret void
-} 
-
-define void 
-@__scatter32_float(<16 x i32> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_float(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void 
-@__scatter64_float(<16 x i64> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_float(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(float)
 
 ;; scatter - double
-scatterbo32_64(double)
 gen_scatter(double)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

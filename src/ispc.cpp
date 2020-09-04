@@ -865,7 +865,8 @@ Target::Target(Arch arch, const char *cpu, ISPCTarget ispc_target, bool pic, boo
         this->m_maskBitCount = 1;
         this->m_hasHalf = true;
         this->m_hasRand = true;
-        this->m_hasGather = this->m_hasScatter = true;
+        this->m_hasGather = true;
+        this->m_hasScatter = false;
         this->m_hasTranscendentals = false;
         // For MIC it is set to true due to performance reasons. The option should be tested.
         this->m_hasTrigonometry = false;
@@ -883,7 +884,8 @@ Target::Target(Arch arch, const char *cpu, ISPCTarget ispc_target, bool pic, boo
         this->m_maskBitCount = 1;
         this->m_hasHalf = true;
         this->m_hasRand = true;
-        this->m_hasGather = this->m_hasScatter = true;
+        this->m_hasGather = true;
+        this->m_hasScatter = false;
         this->m_hasTranscendentals = false;
         this->m_hasTrigonometry = false;
         this->m_hasRsqrtd = this->m_hasRcpd = false;
@@ -902,7 +904,8 @@ Target::Target(Arch arch, const char *cpu, ISPCTarget ispc_target, bool pic, boo
         this->m_maskBitCount = 1;
         this->m_hasHalf = true;
         this->m_hasRand = true;
-        this->m_hasGather = this->m_hasScatter = true;
+        this->m_hasGather = true;
+        this->m_hasScatter = false;
         this->m_hasTranscendentals = false;
         this->m_hasTrigonometry = false;
         this->m_hasRsqrtd = this->m_hasRcpd = false;
