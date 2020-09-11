@@ -27,8 +27,8 @@ template <typename T> static void check(T *dst, int count) {
 
 static void scatter_i32_bench(benchmark::State &state) {
     int count = state.range(0);
-    int *dst = static_cast<int *>(aligned_alloc(ALIGNMENT, sizeof(int) * count));
-    int *idx = static_cast<int *>(aligned_alloc(ALIGNMENT, sizeof(int) * count));
+    int *dst = static_cast<int *>(aligned_alloc_helper(sizeof(int) * count));
+    int *idx = static_cast<int *>(aligned_alloc_helper(sizeof(int) * count));
 
     // init
     init(dst, idx, count);
@@ -40,8 +40,8 @@ static void scatter_i32_bench(benchmark::State &state) {
     // check
     check(dst, count);
 
-    free(dst);
-    free(idx);
+    aligned_free_helper(dst);
+    aligned_free_helper(idx);
     state.SetComplexityN(state.range(0));
 }
 
