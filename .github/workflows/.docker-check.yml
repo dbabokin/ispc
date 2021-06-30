@@ -1,0 +1,20 @@
+name: Check Dockerfiles
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-20.04-cpu:
+    run-on: macos-11
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check environment
+        run: |
+          sysctl -n machdep.cpu.brand_string
+
+      - name: Build Dockerfile
+        run: |
+          cd docker/ubuntu/20.04/cpu_ispc_build
+          docker build -t ispc-cpu:ubuntu20.04 .
