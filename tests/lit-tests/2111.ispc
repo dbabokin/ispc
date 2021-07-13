@@ -1,5 +1,7 @@
 //; RUN: %{ispc} --emit-asm %s --target=avx2-i32x8 --x86-asm-syntax=att --arch=x86-64 -o - | FileCheck %s
 
+// REQUIRES: X86_ENABLED
+
 struct FVector3 {
     float x, y, z;
 };
