@@ -40,7 +40,7 @@ template <typename T>
 static void check_packed_load_active_eq(T *src, T *dst, const unsigned int index, unsigned int num, int count) {
     int width = ispc::width();
     int loc = 0;
-    int checkVal = 0;
+    T checkVal = 0;
     for (int i = 0; i < count / width; i++) {
         for (int programIndex = 0; programIndex < width; programIndex++) {
             if ((programIndex & index) == 0) {
@@ -57,7 +57,7 @@ template <typename T>
 static void check_packed_load_active_neq(T *src, T *dst, const unsigned int index, unsigned int num, int count) {
     int width = ispc::width();
     int loc = 0;
-    int checkVal = 0;
+    T checkVal = 0;
     for (int i = 0; i < count / width; i++) {
         for (int programIndex = 0; programIndex < width; programIndex++) {
             if ((programIndex & index) != 0) {
