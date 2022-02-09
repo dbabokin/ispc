@@ -30,7 +30,6 @@
 ;;   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 define(`MASK',`i1')
-define(`HAVE_GATHER',`1')
 define(`HAVE_SCATTER',`1')
 
 include(`util.m4')
