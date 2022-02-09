@@ -14,6 +14,8 @@
 
 // REQUIRES: X86_ENABLED
 
+// XFAIL: true
+
 //; CHECK_AVX2_I64X4: llvm.x86.avx2.gather.d.ps
 
 //; CHECK_AVX2_I32X8: llvm.x86.avx2.gather.d.ps.256

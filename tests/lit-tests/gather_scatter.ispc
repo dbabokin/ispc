@@ -24,6 +24,8 @@
 
 // REQUIRES: X86_ENABLED
 
+// XFAIL: true
+
 // CHECK_AVX2_X4_32-LABEL: gather_int32___un_3C_uni_3E_vyi:
 // CHECK_AVX2_X4_32-COUNT-1: vpgatherdd
 // CHECK_AVX2_X4_32-NOT: vpgatherdd
