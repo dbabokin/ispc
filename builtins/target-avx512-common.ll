@@ -31,7 +31,6 @@
 
 define(`MASK',`i1')
 define(`HAVE_GATHER',`1')
-define(`HAVE_SCATTER',`1')
 
 include(`target-avx512-utils.ll')
 
@@ -942,228 +941,25 @@ define void @__scatter_base_offsets64_$1(i8* %ptr, i32 %scale, <WIDTH x i64> %of
 ')
 
 ;; scatter - i8
-scatterbo32_64(i8)
 gen_scatter(i8)
 
 ;; scatter - i16
-scatterbo32_64(i16)
 gen_scatter(i16)
 
 ;; scatter - half
-scatterbo32_64(half)
 gen_scatter(half)
 
 ;; scatter - i32
-declare void @llvm.x86.avx512.mask.scattersiv8.si(i8*, <8 x i1>, <8 x i32>, <8 x i32>, i32)
-define void
-@__scatter_base_offsets32_i32(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x i32> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_lo = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %vecmask_hi = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  %offsets_lo = shufflevector <16 x i32> %offsets, <16 x i32> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %offsets_hi = shufflevector <16 x i32> %offsets, <16 x i32> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  %vals_lo = shufflevector <16 x i32> %vals, <16 x i32> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %vals_hi = shufflevector <16 x i32> %vals, <16 x i32> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv8.si, 8, vals_lo, i32, ptr, offsets_lo, i32, vecmask_lo, <8 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv8.si, 8, vals_hi, i32, ptr, offsets_hi, i32, vecmask_hi, <8 x i1>, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.mask.scatterdiv8.si(i8*, <4 x i1>, <4 x i64>, <4 x i32>, i32)
-define void
-@__scatter_base_offsets64_i32(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x i32> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x i32> %vals, <16 x i32> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x i32> %vals, <16 x i32> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x i32> %vals, <16 x i32> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x i32> %vals, <16 x i32> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.si, 4, vals_1, i32, ptr, offsets_1, i64, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.si, 4, vals_2, i32, ptr, offsets_2, i64, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.si, 4, vals_3, i32, ptr, offsets_3, i64, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.si, 4, vals_4, i32, ptr, offsets_4, i64, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-define void
-@__scatter32_i32(<16 x i32> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_i32(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void
-@__scatter64_i32(<16 x i64> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_i32(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x i32> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(i32)
 
 ;; scatter - i64
-declare void @llvm.x86.avx512.mask.scattersiv4.di(i8*, <4 x i1>, <4 x i32>, <4 x i64>, i32)
-define void
-@__scatter_base_offsets32_i64(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x i64> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.di, 4, vals_1, i64, ptr, offsets_1, i32, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.di, 4, vals_2, i64, ptr, offsets_2, i32, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.di, 4, vals_3, i64, ptr, offsets_3, i32, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.di, 4, vals_4, i64, ptr, offsets_4, i32, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.mask.scatterdiv4.di(i8*, <4 x i1>, <4 x i64>, <4 x i64>, i32)
-define void
-@__scatter_base_offsets64_i64(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x i64> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x i64> %vals, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.di, 4, vals_1, i64, ptr, offsets_1, i64, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.di, 4, vals_2, i64, ptr, offsets_2, i64, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.di, 4, vals_3, i64, ptr, offsets_3, i64, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.di, 4, vals_4, i64, ptr, offsets_4, i64, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-define void
-@__scatter32_i64(<16 x i32> %ptrs, <16 x i64> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_i64(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x i64> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void
-@__scatter64_i64(<16 x i64> %ptrs, <16 x i64> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_i64(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x i64> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(i64)
 
 ;; scatter - float
-declare void @llvm.x86.avx512.mask.scattersiv8.sf(i8*, <8 x i1>, <8 x i32>, <8 x float>, i32)
-define void
-@__scatter_base_offsets32_float(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x float> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_lo = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %vecmask_hi = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  %offsets_lo = shufflevector <16 x i32> %offsets, <16 x i32> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %offsets_hi = shufflevector <16 x i32> %offsets, <16 x i32> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  %vals_lo = shufflevector <16 x float> %vals, <16 x float> undef, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7>
-  %vals_hi = shufflevector <16 x float> %vals, <16 x float> undef, <8 x i32> <i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv8.sf, 8, vals_lo, float, ptr, offsets_lo, i32, vecmask_lo, <8 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv8.sf, 8, vals_hi, float, ptr, offsets_hi, i32, vecmask_hi, <8 x i1>, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.mask.scatterdiv8.sf(i8*, <4 x i1>, <4 x i64>, <4 x float>, i32)
-define void
-@__scatter_base_offsets64_float(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x float> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x float> %vals, <16 x float> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x float> %vals, <16 x float> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x float> %vals, <16 x float> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x float> %vals, <16 x float> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.sf, 4, vals_1, float, ptr, offsets_1, i64, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.sf, 4, vals_2, float, ptr, offsets_2, i64, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.sf, 4, vals_3, float, ptr, offsets_3, i64, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv8.sf, 4, vals_4, float, ptr, offsets_4, i64, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-define void
-@__scatter32_float(<16 x i32> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_float(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void
-@__scatter64_float(<16 x i64> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_float(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x float> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(float)
 
 ;; scatter - double
-declare void @llvm.x86.avx512.mask.scattersiv4.df(i8*, <4 x i1>, <4 x i32>, <4 x double>, i32)
-define void
-@__scatter_base_offsets32_double(i8* %ptr, i32 %offset_scale, <16 x i32> %offsets, <16 x double> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i32> %offsets, <16 x i32> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.df, 4, vals_1, double, ptr, offsets_1, i32, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.df, 4, vals_2, double, ptr, offsets_2, i32, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.df, 4, vals_3, double, ptr, offsets_3, i32, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scattersiv4.df, 4, vals_4, double, ptr, offsets_4, i32, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-declare void @llvm.x86.avx512.mask.scatterdiv4.df(i8*, <4 x i1>, <4 x i64>, <4 x double>, i32)
-define void
-@__scatter_base_offsets64_double(i8* %ptr, i32 %offset_scale, <16 x i64> %offsets, <16 x double> %vals, <WIDTH x MASK> %vecmask) nounwind {
-  %vecmask_1 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vecmask_2 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vecmask_3 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vecmask_4 = shufflevector <16 x i1> %vecmask, <16 x i1> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %offsets_1 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %offsets_2 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %offsets_3 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %offsets_4 = shufflevector <16 x i64> %offsets, <16 x i64> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  %vals_1 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %vals_2 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %vals_3 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %vals_4 = shufflevector <16 x double> %vals, <16 x double> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.df, 4, vals_1, double, ptr, offsets_1, i64, vecmask_1, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.df, 4, vals_2, double, ptr, offsets_2, i64, vecmask_2, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.df, 4, vals_3, double, ptr, offsets_3, i64, vecmask_3, <4 x i1>, offset_scale);
-  convert_scale_to_const_scatter(llvm.x86.avx512.mask.scatterdiv4.df, 4, vals_4, double, ptr, offsets_4, i64, vecmask_4, <4 x i1>, offset_scale);
-  ret void
-}
-
-define void
-@__scatter32_double(<16 x i32> %ptrs, <16 x double> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets32_double(i8 * zeroinitializer, i32 1, <16 x i32> %ptrs, <16 x double> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
-
-define void
-@__scatter64_double(<16 x i64> %ptrs, <16 x double> %values, <WIDTH x MASK> %vecmask) nounwind alwaysinline {
-  call void @__scatter_base_offsets64_double(i8 * zeroinitializer, i32 1, <16 x i64> %ptrs, <16 x double> %values, <WIDTH x MASK> %vecmask)
-  ret void
-}
+gen_scatter(double)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; packed_load/store
