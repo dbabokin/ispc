@@ -106,6 +106,8 @@ class Expr : public ASTNode {
         encountered, NULL should be returned. */
     virtual Expr *TypeCheck() = 0;
 
+    virtual Expr *Instantiate(TemplateInstantiation &templInst) const = 0;
+
     virtual bool HasAmbiguousVariability(std::vector<const Expr *> &warn) const;
 };
 
@@ -133,6 +135,7 @@ class UnaryExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    UnaryExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     const Op op;
     Expr *expr;
@@ -179,6 +182,7 @@ class BinaryExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    BinaryExpr *Instantiate(TemplateInstantiation &templInst) const;
     std::pair<llvm::Constant *, bool> GetStorageConstant(const Type *type) const;
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
     bool HasAmbiguousVariability(std::vector<const Expr *> &warn) const;
@@ -216,6 +220,7 @@ class AssignExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    AssignExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     const Op op;
     Expr *lvalue, *rvalue;
@@ -239,6 +244,7 @@ class SelectExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    SelectExpr *Instantiate(TemplateInstantiation &templInst) const;
     bool HasAmbiguousVariability(std::vector<const Expr *> &warn) const;
 
     Expr *test, *expr1, *expr2;
@@ -266,6 +272,7 @@ class ExprList : public Expr {
     ExprList *Optimize();
     ExprList *TypeCheck();
     int EstimateCost() const;
+    ExprList *Instantiate(TemplateInstantiation &templInst) const;
     bool HasAmbiguousVariability(std::vector<const Expr *> &warn) const;
 
     std::vector<Expr *> exprs;
@@ -290,6 +297,7 @@ class FunctionCallExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    FunctionCallExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     Expr *func;
     ExprList *args;
@@ -320,6 +328,7 @@ class IndexExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    IndexExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     Expr *baseExpr, *index;
 
@@ -350,6 +359,7 @@ class MemberExpr : public Expr {
     Expr *Optimize();
     Expr *TypeCheck();
     int EstimateCost() const;
+    MemberExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     virtual int getElementNumber() const = 0;
     virtual const Type *getElementType() const = 0;
@@ -442,6 +452,7 @@ class ConstExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    ConstExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     /** Return the ConstExpr's values as the given pointer type, doing type
         conversion from the actual type if needed.  If forceVarying is
@@ -500,6 +511,7 @@ class TypeCastExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    TypeCastExpr *Instantiate(TemplateInstantiation &templInst) const;
     Symbol *GetBaseSymbol() const;
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
     bool HasAmbiguousVariability(std::vector<const Expr *> &warn) const;
@@ -526,6 +538,7 @@ class ReferenceExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    ReferenceExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     Expr *expr;
 };
@@ -564,6 +577,7 @@ class PtrDerefExpr : public DerefExpr {
     void Print(Indent &indent) const;
     Expr *TypeCheck();
     int EstimateCost() const;
+    PtrDerefExpr *Instantiate(TemplateInstantiation &templInst) const;
 };
 
 /** @brief Expression that represents dereferencing a reference to get its
@@ -579,6 +593,7 @@ class RefDerefExpr : public DerefExpr {
     void Print(Indent &indent) const;
     Expr *TypeCheck();
     int EstimateCost() const;
+    RefDerefExpr *Instantiate(TemplateInstantiation &templInst) const;
 };
 
 /** Expression that represents taking the address of an expression. */
@@ -597,6 +612,7 @@ class AddressOfExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    AddressOfExpr *Instantiate(TemplateInstantiation &templInst) const;
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
 
     Expr *expr;
@@ -618,6 +634,7 @@ class SizeOfExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    SizeOfExpr *Instantiate(TemplateInstantiation &templInst) const;
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
 
     /* One of expr or type should be non-NULL (but not both of them).  The
@@ -641,6 +658,7 @@ class AllocaExpr : public Expr {
     Expr *TypeCheck();
     Expr *Optimize();
     int EstimateCost() const;
+    AllocaExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     // The expr should have size_t type and should evaluate to size
     // of stack memory to be allocated.
@@ -664,6 +682,7 @@ class SymbolExpr : public Expr {
     Expr *Optimize();
     void Print(Indent &indent) const;
     int EstimateCost() const;
+    SymbolExpr *Instantiate(TemplateInstantiation &templInst) const;
 
   private:
     Symbol *symbol;
@@ -686,6 +705,7 @@ class FunctionSymbolExpr : public Expr {
     Expr *Optimize();
     void Print(Indent &indent) const;
     int EstimateCost() const;
+    FunctionSymbolExpr *Instantiate(TemplateInstantiation &templInst) const;
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
 
     /** Given the types of the function arguments, in the presence of
@@ -740,6 +760,7 @@ class SyncExpr : public Expr {
     Expr *Optimize();
     void Print(Indent &indent) const;
     int EstimateCost() const;
+    SyncExpr *Instantiate(TemplateInstantiation &templInst) const;
 };
 
 /** @brief An expression that represents a NULL pointer. */
@@ -757,6 +778,7 @@ class NullPointerExpr : public Expr {
     std::pair<llvm::Constant *, bool> GetConstant(const Type *type) const;
     void Print(Indent &indent) const;
     int EstimateCost() const;
+    NullPointerExpr *Instantiate(TemplateInstantiation &templInst) const;
 };
 
 /** An expression representing a "new" expression, used for dynamically
@@ -775,6 +797,7 @@ class NewExpr : public Expr {
     Expr *Optimize();
     void Print(Indent &indent) const;
     int EstimateCost() const;
+    NewExpr *Instantiate(TemplateInstantiation &templInst) const;
 
     /** Type of object to allocate storage for. */
     const Type *allocType;
@@ -790,6 +813,9 @@ class NewExpr : public Expr {
         instance, or whether a single allocation is performed for the
         entire gang of program instances.) */
     bool isVarying;
+
+  private:
+    NewExpr(const Type *type, Expr *count, Expr *init, bool isV, SourcePos p);
 };
 
 /** This function indicates whether it's legal to convert from fromType to

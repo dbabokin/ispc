@@ -847,8 +847,14 @@ Symbol *TemplateInstantiation::InstantiateSymbol(Symbol *sym) {
         return t->second;
     }
 
-    // TODO: implement symbol instantiation.
-    return sym;
+    const Type *instType = sym->type->ResolveDependence(*this);
+    Symbol *instSym = new Symbol(sym->name, sym->pos, instType, sym->storageClass);
+    instSym->constValue = sym->constValue ? sym->constValue->Instantiate(*this) : nullptr;
+    instSym->varyingCFDepth = sym->varyingCFDepth;
+    instSym->parentFunction = nullptr;
+
+    symMap.emplace(std::make_pair(sym, instSym));
+    return instSym;
 }
 
 // After the instance of the template function is created, the symbols should point to the parent function.

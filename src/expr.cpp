@@ -38,6 +38,7 @@
 #include "expr.h"
 #include "ast.h"
 #include "ctx.h"
+#include "func.h"
 #include "llvmutil.h"
 #include "module.h"
 #include "sym.h"
@@ -1317,6 +1318,11 @@ int UnaryExpr::EstimateCost() const {
         return 0;
 
     return COST_SIMPLE_ARITH_LOGIC_OP;
+}
+
+UnaryExpr *UnaryExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new UnaryExpr(op, instExpr, pos);
 }
 
 void UnaryExpr::Print(Indent &indent) const {
@@ -2821,6 +2827,12 @@ int BinaryExpr::EstimateCost() const {
     return (op == Div || op == Mod) ? COST_COMPLEX_ARITH_OP : COST_SIMPLE_ARITH_LOGIC_OP;
 }
 
+BinaryExpr *BinaryExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instArg0 = arg0 ? arg0->Instantiate(templInst) : nullptr;
+    Expr *instArg1 = arg1 ? arg1->Instantiate(templInst) : nullptr;
+    return new BinaryExpr(op, instArg0, instArg1, pos);
+}
+
 void BinaryExpr::Print(Indent &indent) const {
     if (!arg0 || !arg1 || !GetType()) {
         indent.Print("BinaryExpr: <NULL EXPR>\n");
@@ -3241,6 +3253,12 @@ int AssignExpr::EstimateCost() const {
         return COST_ASSIGN + COST_SIMPLE_ARITH_LOGIC_OP;
 }
 
+AssignExpr *AssignExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instLValue = lvalue ? lvalue->Instantiate(templInst) : nullptr;
+    Expr *instRValue = rvalue ? rvalue->Instantiate(templInst) : nullptr;
+    return new AssignExpr(op, instLValue, instRValue, pos);
+}
+
 void AssignExpr::Print(Indent &indent) const {
     if (!lvalue || !rvalue || !GetType()) {
         indent.Print("AssignExpr: <NULL EXPR>\n");
@@ -3625,6 +3643,13 @@ Expr *SelectExpr::TypeCheck() {
 }
 
 int SelectExpr::EstimateCost() const { return COST_SELECT; }
+
+SelectExpr *SelectExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instTest = test ? test->Instantiate(templInst) : nullptr;
+    Expr *instExpr1 = expr1 ? expr1->Instantiate(templInst) : nullptr;
+    Expr *instExpr2 = expr2 ? expr2->Instantiate(templInst) : nullptr;
+    return new SelectExpr(instTest, instExpr1, instExpr2, pos);
+}
 
 void SelectExpr::Print(Indent &indent) const {
     if (!test || !expr1 || !expr2 || !GetType()) {
@@ -4014,13 +4039,22 @@ int FunctionCallExpr::EstimateCost() const {
         return COST_FUNCALL;
 }
 
+FunctionCallExpr *FunctionCallExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instFunc = func ? func->Instantiate(templInst) : nullptr;
+    ExprList *instantiatedArgs = args ? args->Instantiate(templInst) : nullptr;
+    FunctionCallExpr *inst = new FunctionCallExpr(instFunc, instantiatedArgs, pos, isLaunch);
+    inst->launchCountExpr[0] = launchCountExpr[0] ? launchCountExpr[0]->Instantiate(templInst) : nullptr;
+    inst->launchCountExpr[1] = launchCountExpr[1] ? launchCountExpr[1]->Instantiate(templInst) : nullptr;
+    inst->launchCountExpr[2] = launchCountExpr[2] ? launchCountExpr[2]->Instantiate(templInst) : nullptr;
+    return inst;
+}
+
 void FunctionCallExpr::Print(Indent &indent) const {
     if (!func || !args || !GetType()) {
         indent.Print("FunctionCallExpr: <NULL EXPR>\n");
         indent.Done();
         return;
     }
-
     indent.Print("FunctionCallExpr", pos);
 
     printf("[%s] %s %s\n", GetType()->GetString().c_str(), isLaunch ? "launch" : "", isInvoke ? "invoke_sycl" : "");
@@ -4216,6 +4250,14 @@ std::pair<llvm::Constant *, bool> ExprList::GetConstant(const Type *type) const 
 }
 
 int ExprList::EstimateCost() const { return 0; }
+
+ExprList *ExprList::Instantiate(TemplateInstantiation &templInst) const {
+    ExprList *inst = new ExprList(pos);
+    for (auto e : exprs) {
+        inst->exprs.push_back(e->Instantiate(templInst));
+    }
+    return inst;
+}
 
 void ExprList::Print(Indent &indent) const {
     indent.PrintLn("ExprList", pos);
@@ -4725,6 +4767,12 @@ int IndexExpr::EstimateCost() const {
         return COST_GATHER;
     else
         return COST_LOAD;
+}
+
+IndexExpr *IndexExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instBaseExpr = baseExpr ? baseExpr->Instantiate(templInst) : nullptr;
+    Expr *instIndex = index ? index->Instantiate(templInst) : nullptr;
+    return new IndexExpr(instBaseExpr, instIndex, pos);
 }
 
 void IndexExpr::Print(Indent &indent) const {
@@ -5277,6 +5325,11 @@ int MemberExpr::EstimateCost() const {
         return COST_GATHER + COST_SIMPLE_ARITH_LOGIC_OP;
     else
         return COST_SIMPLE_ARITH_LOGIC_OP;
+}
+
+MemberExpr *MemberExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return MemberExpr::create(instExpr, identifier.c_str(), pos, identifierPos, dereferenceExpr);
 }
 
 void MemberExpr::Print(Indent &indent) const {
@@ -5914,6 +5967,8 @@ Expr *ConstExpr::Optimize() { return this; }
 Expr *ConstExpr::TypeCheck() { return this; }
 
 int ConstExpr::EstimateCost() const { return 0; }
+
+ConstExpr *ConstExpr::Instantiate(TemplateInstantiation &templInst) const { return new ConstExpr(this, pos); }
 
 void ConstExpr::Print(Indent &indent) const {
     indent.Print("ConstExpr", pos);
@@ -7164,6 +7219,12 @@ int TypeCastExpr::EstimateCost() const {
     return COST_TYPECAST_SIMPLE;
 }
 
+TypeCastExpr *TypeCastExpr::Instantiate(TemplateInstantiation &templInst) const {
+    const Type *instType = type ? type->ResolveDependence(templInst) : nullptr;
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new TypeCastExpr(instType, instExpr, pos);
+}
+
 void TypeCastExpr::Print(Indent &indent) const {
     indent.Print("TypeCastExpr", pos);
     printf("[%s]\n", GetType()->GetString().c_str());
@@ -7310,6 +7371,11 @@ Expr *ReferenceExpr::TypeCheck() {
 
 int ReferenceExpr::EstimateCost() const { return 0; }
 
+ReferenceExpr *ReferenceExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new ReferenceExpr(instExpr, pos);
+}
+
 void ReferenceExpr::Print(Indent &indent) const {
     if (expr == NULL || GetType() == NULL) {
         indent.Print("ReferenceExpr: <NULL EXPR>\n");
@@ -7428,6 +7494,11 @@ int PtrDerefExpr::EstimateCost() const {
         return COST_DEREF;
 }
 
+PtrDerefExpr *PtrDerefExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new PtrDerefExpr(instExpr, pos);
+}
+
 void PtrDerefExpr::Print(Indent &indent) const {
     if (expr == NULL || GetType() == NULL) {
         indent.Print("PtrDerefExpr: <NULL EXPR>\n");
@@ -7480,6 +7551,11 @@ int RefDerefExpr::EstimateCost() const {
         return 0;
 
     return COST_DEREF;
+}
+
+RefDerefExpr *RefDerefExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new RefDerefExpr(instExpr, pos);
 }
 
 void RefDerefExpr::Print(Indent &indent) const {
@@ -7585,6 +7661,11 @@ Expr *AddressOfExpr::TypeCheck() {
 Expr *AddressOfExpr::Optimize() { return this; }
 
 int AddressOfExpr::EstimateCost() const { return 0; }
+
+AddressOfExpr *AddressOfExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new AddressOfExpr(instExpr, pos);
+}
 
 std::pair<llvm::Constant *, bool> AddressOfExpr::GetConstant(const Type *type) const {
     if (expr == NULL || expr->GetType() == NULL) {
@@ -7701,6 +7782,14 @@ Expr *SizeOfExpr::Optimize() { return this; }
 
 int SizeOfExpr::EstimateCost() const { return 0; }
 
+SizeOfExpr *SizeOfExpr::Instantiate(TemplateInstantiation &templInst) const {
+    if (expr != nullptr) {
+        return new SizeOfExpr(expr->Instantiate(templInst), pos);
+    }
+    Assert(type != nullptr);
+    return new SizeOfExpr(type->ResolveDependence(templInst), pos);
+}
+
 std::pair<llvm::Constant *, bool> SizeOfExpr::GetConstant(const Type *rtype) const {
     const Type *t = expr ? expr->GetType() : type;
     if (t == NULL)
@@ -7777,6 +7866,11 @@ Expr *AllocaExpr::Optimize() { return this; }
 
 int AllocaExpr::EstimateCost() const { return 0; }
 
+AllocaExpr *AllocaExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Expr *instExpr = expr ? expr->Instantiate(templInst) : nullptr;
+    return new AllocaExpr(instExpr, pos);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // SymbolExpr
 
@@ -7838,6 +7932,11 @@ int SymbolExpr::EstimateCost() const {
     return 0;
 }
 
+SymbolExpr *SymbolExpr::Instantiate(TemplateInstantiation &templInst) const {
+    Symbol *resolvedSymbol = templInst.InstantiateSymbol(symbol);
+    return new SymbolExpr(resolvedSymbol, pos);
+}
+
 void SymbolExpr::Print(Indent &indent) const {
     if (symbol == NULL || GetType() == NULL) {
         indent.Print("SymbolExpr: <NULL EXPR>\n");
@@ -7880,6 +7979,10 @@ Expr *FunctionSymbolExpr::TypeCheck() { return this; }
 Expr *FunctionSymbolExpr::Optimize() { return this; }
 
 int FunctionSymbolExpr::EstimateCost() const { return 0; }
+
+FunctionSymbolExpr *FunctionSymbolExpr::Instantiate(TemplateInstantiation &templInst) const {
+    return new FunctionSymbolExpr(name.c_str(), candidateFunctions, pos);
+}
 
 void FunctionSymbolExpr::Print(Indent &indent) const {
     if (!matchingFunc || !GetType()) {
@@ -8248,6 +8351,8 @@ llvm::Value *SyncExpr::GetValue(FunctionEmitContext *ctx) const {
 
 int SyncExpr::EstimateCost() const { return COST_SYNC; }
 
+SyncExpr *SyncExpr::Instantiate(TemplateInstantiation &templInst) const { return new SyncExpr(pos); }
+
 void SyncExpr::Print(Indent &indent) const {
     indent.PrintLn("SyncExpr", pos);
     indent.Done();
@@ -8291,6 +8396,10 @@ void NullPointerExpr::Print(Indent &indent) const {
 
 int NullPointerExpr::EstimateCost() const { return 0; }
 
+NullPointerExpr *NullPointerExpr::Instantiate(TemplateInstantiation &templInst) const {
+    return new NullPointerExpr(pos);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // NewExpr
 
@@ -8319,6 +8428,10 @@ NewExpr::NewExpr(int typeQual, const Type *t, Expr *init, Expr *count, SourcePos
     if (allocType != NULL)
         allocType = allocType->ResolveUnboundVariability(Variability::Uniform);
 }
+
+// Private constructor for cloning.
+NewExpr::NewExpr(const Type *type, Expr *count, Expr *init, bool isV, SourcePos p)
+    : Expr(p, NewExprID), allocType(type), countExpr(count), initExpr(init), isVarying(isV) {}
 
 llvm::Value *NewExpr::GetValue(FunctionEmitContext *ctx) const {
     bool do32Bit = (g->target->is32Bit() || g->opt.force32BitAddressing);
@@ -8524,3 +8637,10 @@ void NewExpr::Print(Indent &indent) const {
 }
 
 int NewExpr::EstimateCost() const { return COST_NEW; }
+
+NewExpr *NewExpr::Instantiate(TemplateInstantiation &templInst) const {
+    const Type *instType = allocType ? allocType->ResolveDependence(templInst) : nullptr;
+    Expr *instInit = initExpr ? initExpr->Instantiate(templInst) : nullptr;
+    Expr *instCount = countExpr ? countExpr->Instantiate(templInst) : nullptr;
+    return new NewExpr(instType, instInit, instCount, isVarying, pos);
+}
