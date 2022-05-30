@@ -17,7 +17,7 @@ jobs:
     with:
       worker: ubuntu-latest
       release_build: false
-      llvm_version: 14.0
+      llvm_version: "14.0"
       os: linux
 
   linux-build-rel:
@@ -25,5 +25,5 @@ jobs:
     with:
       worker: ubuntu-latest
       release_build: true
-      llvm_version: 14.0
+      llvm_version: "14.0"
       os: linux
