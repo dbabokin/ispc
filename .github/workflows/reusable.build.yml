@@ -22,7 +22,7 @@ on:
 
 jobs:
   linux-build-1:
-    if: inputs.os == linux
+    if: inputs.os == 'linux'
     runs-on: ${{ inputs.worker }}
 
     steps:
@@ -47,7 +47,7 @@ jobs:
         path: docker/ubuntu/18.04/cpu_ispc_build/cache.local
 
   linux-build-2:
-    if: inputs.os == linux
+    if: inputs.os == 'linux'
     needs: [linux-build-1]
     runs-on: ${{ inputs.worker }}
 
