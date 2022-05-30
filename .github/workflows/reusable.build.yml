@@ -38,7 +38,7 @@ jobs:
       run: |
         cd docker/ubuntu/18.04/cpu_ispc_build
         docker buildx create --use
-        docker buildx build --tag ispc/ubuntu18.04:stage1 --target=llvm_build_step1 --cache-to=type=local,dest=cache.local --build-arg REPO=$GITHUB_REPOSITORY --build-arg SHA=$GITHUB_SHA --build-arg LLVM_VERSION=${{ inputs.llvm_version }} ${{ inputs.release_build && '--build-arg EXTRA_BUILD_ARG="--llvm-disable-assertions"' || ''}} .
+        docker buildx build --tag ispc/ubuntu18.04:stage1 --target=llvm_build_step1 --cache-to=type=local,dest=cache.local --build-arg REPO=$GITHUB_REPOSITORY --build-arg SHA=$GITHUB_SHA --build-arg LLVM_VERSION=${{ "inputs.llvm_version" }} inputs.llvm_version ${{ inputs.release_build && '--build-arg EXTRA_BUILD_ARG="--llvm-disable-assertions"' || ''}} .
 
     - name: Upload package
       uses: actions/upload-artifact@v2
