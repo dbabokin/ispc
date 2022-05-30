@@ -25,8 +25,8 @@ env:
   stage1_artifact: ${{ format( 'llvm{0}_linux_x86_stage1_cache', inputs.llvm_version ) }}
   stage2_artifact: ${{ format( 'llvm{0}_{1}_x86', inputs.llvm_version, inputs.os ) }}
   file_name: ${{ format( 'llvm-{0}-ubuntu18.04-{1}-x86.arm.wasm.tar.xz', inputs.llvm_version, inputs.release_build && 'Release' || 'Release+Asserts' ) }}
-  win_generator: ${{ inputs.image == 'windows-2019' && 'Visual Studio 16 2019' || inputs.image == 'windows-2022' && 'Visual Studio 17 2022' || "error" }}
-  win_gen_name: ${{ inputs.image == 'windows-2019' && 'vs2019' || inputs.image == 'windows-2022' && 'vs2022' || "error" }} 
+  win_generator: ${{ inputs.image == 'windows-2019' && 'Visual Studio 16 2019' || inputs.image == 'windows-2022' && 'Visual Studio 17 2022' || 'error' }}
+  win_gen_name: ${{ inputs.image == 'windows-2019' && 'vs2019' || inputs.image == 'windows-2022' && 'vs2022' || 'error' }} 
   win_tar_name: ${{ format( 'llvm-{0}-win.{1}-{2}-x86.arm.wasm', inputs.llvm_version, win_gen_name, inputs.release_build && 'Release' || 'Release+Asserts' )
 
 jobs:
