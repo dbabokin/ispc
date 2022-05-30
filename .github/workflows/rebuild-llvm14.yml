@@ -31,7 +31,7 @@ jobs:
   win-build:
     uses: ./.github/workflows/reusable.build.yml
     with:
-      worker: windows-2019
+      worker: 'windows-2019'
       release_build: false
       llvm_version: "14.0"
       os: win
