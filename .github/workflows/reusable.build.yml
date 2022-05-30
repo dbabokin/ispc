@@ -1,0 +1,88 @@
+name: Reusable LLVM build
+
+on:
+  workflow_call:
+    inputs:
+      worker:
+        description: Workers type to execute on
+        required: true
+        type: string
+      release_build:
+        description: Is it Release build (true) or Release+Asserts (false)
+        required: true
+        type: boolean
+      llvm_version:
+        description: LLVM version to build
+        required: true
+        type: string
+      os:
+        description: OS to build for. May be "windows", "linux", or "macos"
+        required: true
+        type: string
+
+jobs:
+  linux-build-1:
+    if: inputs.os == linux
+    runs-on: ${{ inputs.worker }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Check environment
+      run: |
+        cat /proc/cpuinfo
+
+    - name: Build LLVM
+      run: |
+        cd docker/ubuntu/18.04/cpu_ispc_build
+        docker buildx create --use
+        docker buildx build --tag ispc/ubuntu18.04:stage1 --target=llvm_build_step1 --cache-to=type=local,dest=cache.local --build-arg REPO=$GITHUB_REPOSITORY --build-arg SHA=$GITHUB_SHA --build-arg LLVM_VERSION=${{ inputs.llvm_version }} ${{ inputs.release_build && '--build-arg EXTRA_BUILD_ARG="--llvm-disable-assertions"' || ''}} .
+
+    - name: Upload package
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ format( 'llvm{0}_linux_x86_stage1_cache', inputs.llvm_version ) }}
+        path: docker/ubuntu/18.04/cpu_ispc_build/cache.local
+
+  linux-build-2:
+    if: inputs.os == linux
+    needs: [linux-build-1]
+    runs-on: ${{ inputs.worker }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Check environment
+      run: |
+        cat /proc/cpuinfo
+
+    - name: Download package
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ format( 'llvm{0}_linux_x86_stage1_cache', inputs.llvm_version ) }}
+        path: docker/ubuntu/18.04/cpu_ispc_build/cache.local
+
+    - name: Build LLVM
+      run: |
+        cd docker/ubuntu/18.04/cpu_ispc_build
+        ls -al
+        docker buildx create --use
+        docker buildx build --tag ispc/ubuntu18.04:stage2 --target=llvm_build_step2 --cache-from=type=local,src=cache.local --build-arg REPO=$GITHUB_REPOSITORY --build-arg SHA=$GITHUB_SHA --build-arg LLVM_VERSION=${{ inputs.llvm_version }} ${{ inputs.release_build && '--build-arg EXTRA_BUILD_ARG="--llvm-disable-assertions"' || ''}} --output=type=tar,dest=result.tar .
+
+    - name: Pack LLVM
+      run: |
+        cd docker/ubuntu/18.04/cpu_ispc_build
+        tar xvf result.tar usr/local/src/llvm
+        mv usr/local/src/llvm/bin-${{ inputs.llvm_version }} .
+        tar cJvf ${{ format( 'llvm-{0}-ubuntu18.04-{1}-x86.arm.wasm.tar.xz', inputs.llvm_version, inputs.release_build && 'Release' || 'Release+Asserts' ) }} bin-${{ inputs.llvm_version }}
+
+    - name: Upload package
+      uses: actions/upload-artifact@v2
+      with:
+        name: $${{ format( 'llvm{0}_linux_x86', inputs.llvm_version ) }}
+        path: docker/ubuntu/18.04/cpu_ispc_build/${{ format( 'llvm-{0}-ubuntu18.04-{1}-x86.arm.wasm.tar.xz', inputs.llvm_version, inputs.release_build && 'Release' || 'Release+Asserts' ) }}
+
