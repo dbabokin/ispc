@@ -135,4 +135,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: $${{ env.stage2_artifact }}
-        path: llvm/${{win_tar_name}}.tar.7z
+        path: llvm/${{ env.win_tar_name }}.tar.7z
