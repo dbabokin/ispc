@@ -715,7 +715,7 @@ std::string TemplateTypeParmType::GetCDeclaration(const std::string &cname) cons
 }
 
 // This should never be called.
-llvm::Type *TemplateTypeParmType::LLVMType(llvm::LLVMContext *ctx) const { UNREACHABLE(); }
+llvm::Type *TemplateTypeParmType::LLVMType(llvm::LLVMContext *ctx) const { return nullptr; /*UNREACHABLE();*/ }
 
 // This should never be called.
 llvm::DIType *TemplateTypeParmType::GetDIType(llvm::DIScope *scope) const { UNREACHABLE(); }
