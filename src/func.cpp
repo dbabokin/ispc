@@ -768,3 +768,32 @@ void Function::GenerateIR() {
         }
     }
 }
+
+///////////////////////////////////////////////////////////////////////////
+// TemplateParms
+
+TemplateParms::TemplateParms() {}
+
+void TemplateParms::Add(const TemplateTypeParmType *p) { parms.push_back(p); }
+
+size_t TemplateParms::GetCount() const { return parms.size(); }
+
+const TemplateTypeParmType *TemplateParms::operator[](size_t i) const { return parms[i]; }
+
+bool TemplateParms::IsEqual(const TemplateParms *p) const {
+    if (p == nullptr) {
+        return false;
+    }
+
+    if (GetCount() != p->GetCount()) {
+        return false;
+    }
+
+    for (size_t i = GetCount(); i < GetCount(); i++) {
+        if (!Type::Equal((*this)[i], (*p)[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
