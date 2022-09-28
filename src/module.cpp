@@ -993,6 +993,95 @@ void Module::AddFunctionDefinition(const std::string &name, const FunctionType *
     ast->AddFunction(sym, code);
 }
 
+//
+void Module::AddFunctionTemplateDeclaration(const TemplateParms *templateParmList, const std::string &name,
+                                            const FunctionType *ftype, StorageClass sc, bool isInline, bool isNoInline,
+                                            bool isVectorCall, SourcePos pos) {
+    Assert(ftype != NULL);
+    Assert(templateParmList != NULL);
+
+    // If a global variable with the same name has already been declared
+    // issue an error.
+    if (symbolTable->LookupVariable(name.c_str()) != NULL) {
+        Error(pos,
+              "Function template \"%s\" shadows previously-declared global variable. "
+              "Ignoring this definition.",
+              name.c_str());
+        return;
+    }
+
+    // Check overloads if the function template is already declared and we may skip
+    // creating a new symbol.
+    std::vector<TemplateSymbol *> overloadFuncTempls;
+    symbolTable->LookupFunctionTemplate(name, &overloadFuncTempls);
+
+    for (unsigned int i = 0; i < overloadFuncTempls.size(); ++i) {
+        TemplateSymbol *overloadFunc = overloadFuncTempls[i];
+
+        const FunctionType *overloadType = overloadFunc->type;
+        if (overloadType == nullptr) {
+            Assert(m->errorCount == 0);
+            continue;
+        }
+
+        // Check for a redeclaration of a function template with the same name
+        // and type.  This also hits when we have previously declared
+        // the function and are about to define it.
+        if (templateParmList->IsEqual(overloadFunc->templateParms) && Type::Equal(overloadFunc->type, ftype)) {
+            return;
+        }
+    }
+
+    // TODO: extern "C" - do we allow it?
+
+    // TODO: Xe adjust linkage
+
+    // No mangling for template, only instantiations.
+
+    // TODO: inline / noinline check.
+
+    // TODO: vectorcall checks
+
+    // ...
+
+    TemplateSymbol *funcTemplSym = new TemplateSymbol(templateParmList, name, ftype, pos, isInline, isNoInline);
+    symbolTable->AddFunctionTemplate(funcTemplSym);
+}
+
+void Module::AddFunctionTemplateDefinition(const TemplateParms *templateParmList, const std::string &name,
+                                           const FunctionType *ftype, Stmt *code) {
+    if (templateParmList == nullptr || ftype == nullptr) {
+        return;
+    }
+
+    TemplateSymbol *sym = symbolTable->LookupFunctionTemplate(templateParmList, name, ftype);
+    if (sym == NULL || code == NULL) {
+        Assert(m->errorCount > 0);
+        return;
+    }
+
+    // Same trick, as in AddFunctionDefinition - update source position and the type to be the ones from function
+    // template definition, not declaration.
+    // This actually a hack, which addresses lack of expressiveness of AST, which doesn't represent pure declaration,
+    // only definitions.
+    sym->pos = code->pos;
+    sym->type = ftype;
+
+    ast->AddFunctionTemplate(sym, code);
+}
+
+void Module::AddFunctionTemplateInstantiation(const std::string &name,
+                                              const std::vector<std::pair<const Type *, SourcePos>> &types) {
+    std::vector<TemplateSymbol *> matches;
+    bool found = symbolTable->LookupFunctionTemplate(name, &matches);
+
+    if (found) {
+        // TODO: we need to find an appropriate match, not use the first one.
+        FunctionTemplate *templ = matches[0]->functionTemplate;
+        templ->AddInstantiation(types);
+    }
+}
+
 void Module::AddExportedTypes(const std::vector<std::pair<const Type *, SourcePos>> &types) {
     for (int i = 0; i < (int)types.size(); ++i) {
         if (CastType<StructType>(types[i].first) == NULL && CastType<VectorType>(types[i].first) == NULL &&
