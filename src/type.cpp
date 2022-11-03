@@ -154,6 +154,7 @@ const AtomicType *AtomicType::UniformUInt64 = new AtomicType(AtomicType::TYPE_UI
 const AtomicType *AtomicType::VaryingUInt64 = new AtomicType(AtomicType::TYPE_UINT64, Variability::Varying, false);
 const AtomicType *AtomicType::UniformDouble = new AtomicType(AtomicType::TYPE_DOUBLE, Variability::Uniform, false);
 const AtomicType *AtomicType::VaryingDouble = new AtomicType(AtomicType::TYPE_DOUBLE, Variability::Varying, false);
+const AtomicType *AtomicType::Dependent = new AtomicType(AtomicType::TYPE_DEPENDENT, Variability::Uniform, false);
 const AtomicType *AtomicType::Void = new AtomicType(TYPE_VOID, Variability::Uniform, false);
 
 AtomicType::AtomicType(BasicType bt, Variability v, bool ic)
@@ -171,6 +172,17 @@ bool Type::IsArrayType() const { return (CastType<ArrayType>(this) != NULL); }
 bool Type::IsReferenceType() const { return (CastType<ReferenceType>(this) != NULL); }
 
 bool Type::IsVoidType() const { return EqualIgnoringConst(this, AtomicType::Void); }
+
+bool Type::IsDependentType() const {
+    if (CastType<TemplateTypeParmType>(this) != NULL) {
+        return true;
+    }
+    const AtomicType *at = CastType<AtomicType>(this);
+    if (at != NULL && at->basicType == AtomicType::TYPE_DEPENDENT) {
+        return true;
+    }
+    return false;
+}
 
 bool AtomicType::IsFloatType() const {
     return (basicType == TYPE_FLOAT16 || basicType == TYPE_FLOAT || basicType == TYPE_DOUBLE);
@@ -213,6 +225,7 @@ const AtomicType *AtomicType::GetAsUnsignedType() const {
 }
 
 const AtomicType *AtomicType::GetAsConstType() const {
+    Assert(basicType != TYPE_DEPENDENT);
     if (isConst == true)
         return this;
 
@@ -224,6 +237,7 @@ const AtomicType *AtomicType::GetAsConstType() const {
 }
 
 const AtomicType *AtomicType::GetAsNonConstType() const {
+    Assert(basicType != TYPE_DEPENDENT);
     if (isConst == false)
         return this;
 
@@ -237,7 +251,7 @@ const AtomicType *AtomicType::GetAsNonConstType() const {
 const AtomicType *AtomicType::GetBaseType() const { return this; }
 
 const AtomicType *AtomicType::GetAsVaryingType() const {
-    Assert(basicType != TYPE_VOID);
+    Assert(basicType != TYPE_VOID && basicType != TYPE_DEPENDENT);
     if (variability == Variability::Varying)
         return this;
 
@@ -250,7 +264,7 @@ const AtomicType *AtomicType::GetAsVaryingType() const {
 }
 
 const AtomicType *AtomicType::GetAsUniformType() const {
-    Assert(basicType != TYPE_VOID);
+    Assert(basicType != TYPE_VOID && basicType != TYPE_DEPENDENT);
     if (variability == Variability::Uniform)
         return this;
 
@@ -263,21 +277,27 @@ const AtomicType *AtomicType::GetAsUniformType() const {
 }
 
 const AtomicType *AtomicType::GetAsUnboundVariabilityType() const {
-    Assert(basicType != TYPE_VOID);
+    Assert(basicType != TYPE_VOID && basicType != TYPE_DEPENDENT);
     if (variability == Variability::Unbound)
         return this;
     return new AtomicType(basicType, Variability::Unbound, isConst);
 }
 
 const AtomicType *AtomicType::GetAsSOAType(int width) const {
-    Assert(basicType != TYPE_VOID);
+    Assert(basicType != TYPE_VOID && basicType != TYPE_DEPENDENT);
     if (variability == Variability(Variability::SOA, width))
         return this;
     return new AtomicType(basicType, Variability(Variability::SOA, width), isConst);
 }
 
-const AtomicType *AtomicType::ResolveDependence(TemplateInstantiation &templInst) const { return this; }
+const AtomicType *AtomicType::ResolveDependence(TemplateInstantiation &templInst) const {
+    // TODO: ???
+    // Assert(basicType != TYPE_DEPENDENT); // Dependent placeholder type should not be attempted to resolve.
+    return this;
+}
+
 const AtomicType *AtomicType::ResolveUnboundVariability(Variability v) const {
+    Assert(basicType != TYPE_DEPENDENT);
     Assert(v != Variability::Unbound);
     if (variability != Variability::Unbound)
         return this;
@@ -333,6 +353,9 @@ std::string AtomicType::GetString() const {
     case TYPE_DOUBLE:
         ret += "double";
         break;
+    case TYPE_DEPENDENT:
+        ret += "<dependent type>";
+        break;
     default:
         FATAL("Logic error in AtomicType::GetString()");
     }
@@ -340,6 +363,7 @@ std::string AtomicType::GetString() const {
 }
 
 std::string AtomicType::Mangle() const {
+    Assert(basicType != TYPE_DEPENDENT);
     std::string ret;
     if (isConst)
         ret += "C";
@@ -392,6 +416,7 @@ std::string AtomicType::Mangle() const {
 }
 
 std::string AtomicType::GetCDeclaration(const std::string &name) const {
+    Assert(basicType != TYPE_DEPENDENT);
     std::string ret;
     if (variability == Variability::Unbound) {
         Assert(m->errorCount > 0);
@@ -492,6 +517,7 @@ static llvm::Type *lGetAtomicLLVMType(llvm::LLVMContext *ctx, const AtomicType *
             return isUniform ? LLVMTypes::Int64Type : LLVMTypes::Int64VectorType;
         case AtomicType::TYPE_DOUBLE:
             return isUniform ? LLVMTypes::DoubleType : LLVMTypes::DoubleVectorType;
+        case AtomicType::TYPE_DEPENDENT:
         default:
             FATAL("logic error in lGetAtomicLLVMType");
             return NULL;
@@ -502,10 +528,17 @@ static llvm::Type *lGetAtomicLLVMType(llvm::LLVMContext *ctx, const AtomicType *
     }
 }
 
-llvm::Type *AtomicType::LLVMStorageType(llvm::LLVMContext *ctx) const { return lGetAtomicLLVMType(ctx, this, true); }
-llvm::Type *AtomicType::LLVMType(llvm::LLVMContext *ctx) const { return lGetAtomicLLVMType(ctx, this, false); }
+llvm::Type *AtomicType::LLVMStorageType(llvm::LLVMContext *ctx) const {
+    Assert(basicType != TYPE_DEPENDENT);
+    return lGetAtomicLLVMType(ctx, this, true);
+}
+llvm::Type *AtomicType::LLVMType(llvm::LLVMContext *ctx) const {
+    Assert(basicType != TYPE_DEPENDENT);
+    return lGetAtomicLLVMType(ctx, this, false);
+}
 
 llvm::DIType *AtomicType::GetDIType(llvm::DIScope *scope) const {
+    Assert(basicType != TYPE_DEPENDENT);
     Assert(variability.type != Variability::Unbound);
 
     if (variability.type == Variability::Uniform) {
