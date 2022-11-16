@@ -694,6 +694,8 @@ class SymbolExpr : public Expr {
 class FunctionSymbolExpr : public Expr {
   public:
     FunctionSymbolExpr(const char *name, const std::vector<Symbol *> &candFuncs, SourcePos pos);
+    FunctionSymbolExpr(const char *name, const std::vector<TemplateSymbol *> &candFuncs,
+                       std::vector<std::pair<const Type *, SourcePos>> &types, SourcePos pos);
 
     static inline bool classof(FunctionSymbolExpr const *) { return true; }
     static inline bool classof(ASTNode const *N) { return N->getValueID() == FunctionSymbolExprID; }
@@ -727,6 +729,7 @@ class FunctionSymbolExpr : public Expr {
 
   private:
     std::vector<Symbol *> getCandidateFunctions(int argCount) const;
+    std::vector<Symbol *> getCandidateTemplateFunctions(const std::vector<const Type *> &argTypes) const;
     static int computeOverloadCost(const FunctionType *ftype, const std::vector<const Type *> &argTypes,
                                    const std::vector<bool> *argCouldBeNULL, const std::vector<bool> *argIsConstant,
                                    int *cost);
@@ -738,6 +741,8 @@ class FunctionSymbolExpr : public Expr {
         there may be more then one, in which case we need to resolve which
         overload is the best match. */
     std::vector<Symbol *> candidateFunctions;
+    std::vector<TemplateSymbol *> candidateTemplateFunctions;
+    std::vector<std::pair<const Type *, SourcePos>> templateArgs;
 
     /** The actual matching function found after overload resolution. */
     Symbol *matchingFunc;
