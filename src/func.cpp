@@ -146,12 +146,18 @@ Function::Function(Symbol *s, Stmt *c) : sym(s), code(c) {
     for (int i = 0; i < type->GetNumParameters(); ++i) {
         const char *paramName = type->GetParameterName(i).c_str();
         Symbol *paramSym = m->symbolTable->LookupVariable(paramName);
+        const Type *paramType = type->GetParameterType(i);
         if (paramSym == nullptr)
             Assert(strncmp(paramName, "__anon_parameter_", 17) == 0);
+        if (paramSym && Type::Equal(paramSym->type, paramType) == false) {
+            // This may happen only if there was an error earlier, for example
+            // due to two parameters decalred with the same name.
+            Assert(m->errorCount > 0);
+            paramSym = nullptr;
+        }
         args.push_back(paramSym);
 
-        const Type *t = type->GetParameterType(i);
-        if (paramSym != nullptr && CastType<ReferenceType>(t) == nullptr)
+        if (paramSym != nullptr && CastType<ReferenceType>(paramType) == nullptr)
             paramSym->parentFunction = this;
     }
 
