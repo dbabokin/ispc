@@ -14,7 +14,7 @@ class ReplaceStdlibShiftPass : public llvm::PassInfoMixin<ReplaceStdlibShiftPass
   public:
     explicit ReplaceStdlibShiftPass() {}
 
-    static llvm::StringRef getPassName() { return "Resolve \"replace extract insert chains\""; }
+    static llvm::StringRef getPassName() { return "ReplaceStdlibShift"; }
     llvm::PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM);
 
   private:
