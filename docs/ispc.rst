@@ -3702,12 +3702,14 @@ What is currently supported:
   function call syntax (i.e. ``add(1, 2);``).
 * Explicit template function instantiations (i.e.
   ``template int add<int>(int a, int b);``).
+* Explicit template function specializations (i.e.
+  ``template<> int add<int>(int a, int b) { return a - b;}``).
 
 What is currently not supported, but is planned to be supported:
 
 * Non-type template parameters.
 * Default values for template parameters.
-* Template function specializations.
+* Template arguments deduction in template function specializations.
 
 While template argument deduction rules generally follow C++, there are some
 differences caused by existence of ``uniform``, ``varying`` and ``unbound``
