@@ -2430,9 +2430,10 @@ llvm::Value *FunctionEmitContext::LoadInst(llvm::Value *ptr, llvm::Value *mask, 
         elType = ptrType->GetBaseType();
     }
 
-    if (CastType<UndefinedStructType>(ptrType->GetBaseType())) {
+    const StructType *st = CastType<StructType>(ptrType->GetBaseType());
+    if (st && st->IsIncomplete()) {
         Error(currentPos, "Unable to load to undefined struct type \"%s\".",
-              ptrType->GetBaseType()->GetString().c_str());
+              st->GetString().c_str());
         return nullptr;
     }
 
@@ -3035,9 +3036,10 @@ void FunctionEmitContext::StoreInst(llvm::Value *value, llvm::Value *ptr, llvm::
     const PointerType *ptrType = RegularizePointer(ptrRefType);
     AddressInfo *ptrInfo = new AddressInfo(ptr, ptrType);
 
-    if (CastType<UndefinedStructType>(ptrType->GetBaseType())) {
+    const StructType *st = CastType<StructType>(ptrType->GetBaseType());
+    if (st && st->IsIncomplete()) {
         Error(currentPos, "Unable to store to undefined struct type \"%s\".",
-              ptrType->GetBaseType()->GetString().c_str());
+              st->GetString().c_str());
         return;
     }
 

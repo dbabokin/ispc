@@ -230,10 +230,11 @@ TemplateSymbol *SymbolTable::LookupFunctionTemplate(const TemplateParms *templat
 
 bool SymbolTable::AddType(const char *name, const Type *type, SourcePos pos) {
     const Type *t = LookupLocalType(name);
-    if (t != nullptr && CastType<UndefinedStructType>(t) == nullptr) {
+    const StructType *st;
+    if (t != nullptr && (st = CastType<StructType>(t)) != nullptr && !st->IsIncomplete()) {
         // If we have a previous declaration of anything other than an
-        // UndefinedStructType with this struct name, issue an error.  If
-        // we have an UndefinedStructType, then we'll fall through to the
+        // opaque StructType with this struct name, issue an error.  If
+        // we have an opaque StructType, then we'll fall through to the
         // code below that adds the definition to the type map.
         Error(pos, "Ignoring redefinition of type \"%s\".", name);
         return false;

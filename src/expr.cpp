@@ -1336,7 +1336,9 @@ Expr *UnaryExpr::TypeCheck() {
             Error(expr->pos, "Illegal to pre/post increment \"%s\" type.", type->GetString().c_str());
             return nullptr;
         }
-        if (CastType<UndefinedStructType>(pt->GetBaseType())) {
+
+        const StructType *st = CastType<StructType>(pt->GetBaseType());
+        if (st && st->IsIncomplete()) {
             Error(expr->pos,
                   "Illegal to pre/post increment pointer to "
                   "undefined struct type \"%s\".",
@@ -2640,14 +2642,16 @@ Expr *BinaryExpr::TypeCheck() {
                   type1->GetString().c_str());
             return nullptr;
         }
-        if (CastType<UndefinedStructType>(pt0->GetBaseType())) {
+        const StructType *st0 = CastType<StructType>(pt0->GetBaseType());
+        if (st0 && st0->IsIncomplete()) {
             Error(pos,
                   "Illegal to perform pointer arithmetic "
                   "on undefined struct type \"%s\".",
                   pt0->GetString().c_str());
             return nullptr;
         }
-        if (CastType<UndefinedStructType>(pt1->GetBaseType())) {
+        const StructType *st1 = CastType<StructType>(pt1->GetBaseType());
+        if (st1 && st1->IsIncomplete()) {
             Error(pos,
                   "Illegal to perform pointer arithmetic "
                   "on undefined struct type \"%s\".",
@@ -2688,7 +2692,8 @@ Expr *BinaryExpr::TypeCheck() {
                   pt0->GetString().c_str());
             return nullptr;
         }
-        if (CastType<UndefinedStructType>(pt0->GetBaseType())) {
+        const StructType *st0 = CastType<StructType>(pt0->GetBaseType());
+        if (st0 && st0->IsIncomplete()) {
             Error(pos,
                   "Illegal to perform pointer arithmetic "
                   "on undefined struct type \"%s\".",
@@ -5333,7 +5338,8 @@ MemberExpr *MemberExpr::create(Expr *e, const char *id, SourcePos p, SourcePos i
               exprType->GetString().c_str());
         return nullptr;
     }
-    if (CastType<StructType>(exprType) != nullptr) {
+    const StructType *st = CastType<StructType>(exprType);
+    if (st && !st->IsIncomplete()) {
         const StructType *st = CastType<StructType>(exprType);
         if (st->IsDefined()) {
             std::string elemName(id);
@@ -5350,9 +5356,9 @@ MemberExpr *MemberExpr::create(Expr *e, const char *id, SourcePos p, SourcePos i
                   derefLValue ? "->" : ".", exprType->GetString().c_str());
             return nullptr;
         }
-    } else if (CastType<VectorType>(exprType) != nullptr)
+    } else if (CastType<VectorType>(exprType) != nullptr) {
         return new VectorMemberExpr(e, id, p, idpos, derefLValue);
-    else if (CastType<UndefinedStructType>(exprType)) {
+    } else if (st && st->IsIncomplete()) {
         Error(p,
               "Member operator \"%s\" can't be applied to declared "
               "but not defined struct type \"%s\".",
@@ -7986,7 +7992,8 @@ Expr *SizeOfExpr::TypeCheck() {
     }
 
     // Can't compute the size of a struct without a definition
-    if (type != nullptr && CastType<UndefinedStructType>(type) != nullptr) {
+    const StructType *st;
+    if (type != nullptr && (st = CastType<StructType>(type)) && st->IsIncomplete()) {
         Error(pos,
               "Can't compute the size of declared but not defined "
               "struct type \"%s\".",
@@ -9102,14 +9109,14 @@ Expr *NewExpr::TypeCheck() {
         return nullptr;
     }
 
-    if (CastType<UndefinedStructType>(allocType) != nullptr) {
+    const StructType *st = CastType<StructType>(allocType);
+    if (st && st->IsIncomplete()) {
         Error(pos,
               "Can't dynamically allocate storage for declared "
               "but not defined type \"%s\".",
               allocType->GetString().c_str());
         return nullptr;
     }
-    const StructType *st = CastType<StructType>(allocType);
     if (st != nullptr && !st->IsDefined()) {
         Error(pos,
               "Can't dynamically allocate storage for declared "

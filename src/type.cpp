@@ -184,8 +184,6 @@ bool Type::IsDependentType() const {
         }
         return false;
     }
-    case UNDEFINED_STRUCT_TYPE:
-        return false;
     case REFERENCE_TYPE:
         return CastType<ReferenceType>(this)->GetReferenceTarget()->IsDependentType();
     case FUNCTION_TYPE: {
@@ -1874,7 +1872,7 @@ StructType::StructType(const std::string &n, const llvm::SmallVector<const Type 
                        const llvm::SmallVector<std::string, 8> &en, const llvm::SmallVector<SourcePos, 8> &ep, bool ic,
                        Variability v, bool ia, SourcePos p)
     : CollectionType(STRUCT_TYPE), name(n), elementTypes(elts), elementNames(en), elementPositions(ep), variability(v),
-      isConst(ic), isAnonymous(ia), pos(p) {
+      isConst(ic), isAnonymous(ia), isIncomplete(false), pos(p) {
     oppositeConstStructType = nullptr;
     finalElementTypes.resize(elts.size(), nullptr);
 
@@ -1940,6 +1938,18 @@ StructType::StructType(const std::string &n, const llvm::SmallVector<const Type 
     }
 }
 
+StructType::StructType(const std::string &n, const Variability v, bool ic, SourcePos p) 
+    : CollectionType(STRUCT_TYPE), name(n), variability(v),
+      isConst(ic), isAnonymous(false), isIncomplete(true), pos(p) {
+    Assert(name != "");
+    if (variability != Variability::Unbound) {
+        // Create a new opaque LLVM struct type for this struct name
+        std::string mname = lMangleStructName(name, variability);
+        if (m->structTypeMap.find(mname) == m->structTypeMap.end())
+            m->structTypeMap[mname] = llvm::StructType::create(*g->ctx, mname);
+    }
+}
+
 const std::string StructType::GetCStructName() const {
     // only return mangled name for varying structs for backwards
     // compatibility...
@@ -1968,11 +1978,10 @@ bool StructType::IsConstType() const { return isConst; }
 bool StructType::IsDefined() const {
     for (int i = 0; i < GetElementCount(); i++) {
         const Type *t = GetElementType(i);
-        const UndefinedStructType *ust = CastType<UndefinedStructType>(t);
-        if (ust != nullptr) {
+        const StructType *st = CastType<StructType>(t);
+        if (st != nullptr && st->IsIncomplete()) {
             return false;
         }
-        const StructType *st = CastType<StructType>(t);
         if (st != nullptr) {
             if (!st->IsDefined()) {
                 return false;
@@ -1982,33 +1991,52 @@ bool StructType::IsDefined() const {
     return true;
 }
 
+bool StructType::IsIncomplete() const { return isIncomplete; }
+
 const Type *StructType::GetBaseType() const { return this; }
 
 const StructType *StructType::GetAsVaryingType() const {
-    if (IsVaryingType())
+    if (IsVaryingType()) {
         return this;
-    else
+    } else {
+        if (IsIncomplete()) {
+            return new StructType(name, Variability(Variability::Varying), isConst, pos);
+        }
         return new StructType(name, elementTypes, elementNames, elementPositions, isConst,
                               Variability(Variability::Varying), isAnonymous, pos);
+    }
 }
 
 const StructType *StructType::GetAsUniformType() const {
-    if (IsUniformType())
+    if (IsUniformType()) {
         return this;
-    else
+    } else {
+        if (IsIncomplete()) {
+            return new StructType(name, Variability(Variability::Uniform), isConst, pos);
+        }
         return new StructType(name, elementTypes, elementNames, elementPositions, isConst,
                               Variability(Variability::Uniform), isAnonymous, pos);
+    }
 }
 
 const StructType *StructType::GetAsUnboundVariabilityType() const {
-    if (HasUnboundVariability())
+    if (HasUnboundVariability()) {
         return this;
-    else
+    } else {
+        if (IsIncomplete()) {
+            return new StructType(name, Variability(Variability::Unbound), isConst, pos);
+        }
         return new StructType(name, elementTypes, elementNames, elementPositions, isConst,
                               Variability(Variability::Unbound), isAnonymous, pos);
+    }
 }
 
 const StructType *StructType::GetAsSOAType(int width) const {
+    if (IsIncomplete()) {
+        FATAL("StructType::GetAsSOAType() shouldn't be called for incomplete structure type.");
+        return nullptr;
+    }
+
     if (GetSOAWidth() == width)
         return this;
 
@@ -2027,6 +2055,10 @@ const StructType *StructType::ResolveUnboundVariability(Variability v) const {
     if (variability != Variability::Unbound)
         return this;
 
+    if (IsIncomplete()) {
+        return new StructType(name, v, isConst, pos);
+    }
+
     // We don't resolve the members here but leave them unbound, so that if
     // resolve to varying but later want to get the uniform version of this
     // type, for example, then we still have the information around about
@@ -2035,26 +2067,34 @@ const StructType *StructType::ResolveUnboundVariability(Variability v) const {
 }
 
 const StructType *StructType::GetAsConstType() const {
-    if (isConst == true)
+    if (isConst == true) {
         return this;
-    else if (oppositeConstStructType != nullptr)
+    } else if (oppositeConstStructType != nullptr) {
         return oppositeConstStructType;
-    else {
-        oppositeConstStructType =
-            new StructType(name, elementTypes, elementNames, elementPositions, true, variability, isAnonymous, pos);
+    } else {
+        if (IsIncomplete()) {
+            oppositeConstStructType = new StructType(name, variability, true, pos);
+        } else {
+            oppositeConstStructType =
+                new StructType(name, elementTypes, elementNames, elementPositions, true, variability, isAnonymous, pos);
+        }
         oppositeConstStructType->oppositeConstStructType = this;
         return oppositeConstStructType;
     }
 }
 
 const StructType *StructType::GetAsNonConstType() const {
-    if (isConst == false)
+    if (isConst == false) {
         return this;
-    else if (oppositeConstStructType != nullptr)
+    } else if (oppositeConstStructType != nullptr) {
         return oppositeConstStructType;
-    else {
-        oppositeConstStructType =
-            new StructType(name, elementTypes, elementNames, elementPositions, false, variability, isAnonymous, pos);
+    } else {
+        if (IsIncomplete()) {
+            oppositeConstStructType = new StructType(name, variability, false, pos);
+        } else {
+            oppositeConstStructType =
+                new StructType(name, elementTypes, elementNames, elementPositions, false, variability, isAnonymous, pos);
+        }
         oppositeConstStructType->oppositeConstStructType = this;
         return oppositeConstStructType;
     }
@@ -2136,6 +2176,17 @@ llvm::Type *StructType::LLVMType(llvm::LLVMContext *ctx) const {
 
 // Versioning of this function becomes really messy, so versioning the whole function.
 llvm::DIType *StructType::GetDIType(llvm::DIScope *scope) const {
+    if (IsIncomplete()) {
+        llvm::DIFile *diFile = pos.GetDIFile();
+        llvm::DINamespace *diSpace = pos.GetDINamespace();
+        llvm::DINodeArray elements;
+        return m->diBuilder->createStructType(diSpace, GetString(), diFile,
+                                              pos.first_line,         // Line number
+                                              0,                      // Size
+                                              0,                      // Align
+                                              llvm::DINode::FlagZero, // Flags
+                                              nullptr, elements);
+    }
     llvm::Type *llvm_type = LLVMStorageType(g->ctx);
     auto &dataLayout = m->module->getDataLayout();
     auto layout = dataLayout.getStructLayout(llvm::dyn_cast_or_null<llvm::StructType>(llvm_type));
@@ -2172,6 +2223,7 @@ llvm::DIType *StructType::GetDIType(llvm::DIScope *scope) const {
 }
 
 const Type *StructType::GetElementType(int i) const {
+    Assert(!IsIncomplete());
     Assert(variability != Variability::Unbound);
     Assert(i < (int)elementTypes.size());
 
@@ -2199,6 +2251,7 @@ const Type *StructType::GetRawElementType(int i) const {
 }
 
 const Type *StructType::GetElementType(const std::string &n) const {
+    Assert(!IsIncomplete());
     for (unsigned int i = 0; i < elementNames.size(); ++i)
         if (elementNames[i] == n)
             return GetElementType(i);
@@ -2206,6 +2259,7 @@ const Type *StructType::GetElementType(const std::string &n) const {
 }
 
 int StructType::GetElementNumber(const std::string &n) const {
+    Assert(!IsIncomplete());
     for (unsigned int i = 0; i < elementNames.size(); ++i)
         if (elementNames[i] == n)
             return i;
@@ -2213,6 +2267,7 @@ int StructType::GetElementNumber(const std::string &n) const {
 }
 
 bool StructType::checkIfCanBeSOA(const StructType *st) {
+    Assert(!st->IsIncomplete());
     bool ok = true;
     for (int i = 0; i < (int)st->elementTypes.size(); ++i) {
         const Type *eltType = st->elementTypes[i];
@@ -2239,124 +2294,6 @@ bool StructType::checkIfCanBeSOA(const StructType *st) {
     return ok;
 }
 
-///////////////////////////////////////////////////////////////////////////
-// UndefinedStructType
-
-UndefinedStructType::UndefinedStructType(const std::string &n, const Variability var, bool ic, SourcePos p)
-    : Type(UNDEFINED_STRUCT_TYPE), name(n), variability(var), isConst(ic), pos(p) {
-    Assert(name != "");
-    if (variability != Variability::Unbound) {
-        // Create a new opaque LLVM struct type for this struct name
-        std::string mname = lMangleStructName(name, variability);
-        if (m->structTypeMap.find(mname) == m->structTypeMap.end())
-            m->structTypeMap[mname] = llvm::StructType::create(*g->ctx, mname);
-    }
-}
-
-Variability UndefinedStructType::GetVariability() const { return variability; }
-
-bool UndefinedStructType::IsBoolType() const { return false; }
-
-bool UndefinedStructType::IsFloatType() const { return false; }
-
-bool UndefinedStructType::IsIntType() const { return false; }
-
-bool UndefinedStructType::IsUnsignedType() const { return false; }
-
-bool UndefinedStructType::IsSignedType() const { return false; }
-
-bool UndefinedStructType::IsConstType() const { return isConst; }
-
-const Type *UndefinedStructType::GetBaseType() const { return this; }
-
-const UndefinedStructType *UndefinedStructType::GetAsVaryingType() const {
-    if (variability == Variability::Varying)
-        return this;
-    return new UndefinedStructType(name, Variability::Varying, isConst, pos);
-}
-
-const UndefinedStructType *UndefinedStructType::GetAsUniformType() const {
-    if (variability == Variability::Uniform)
-        return this;
-    return new UndefinedStructType(name, Variability::Uniform, isConst, pos);
-}
-
-const UndefinedStructType *UndefinedStructType::GetAsUnboundVariabilityType() const {
-    if (variability == Variability::Unbound)
-        return this;
-    return new UndefinedStructType(name, Variability::Unbound, isConst, pos);
-}
-
-const UndefinedStructType *UndefinedStructType::GetAsSOAType(int width) const {
-    FATAL("UndefinedStructType::GetAsSOAType() shouldn't be called.");
-    return nullptr;
-}
-
-const UndefinedStructType *UndefinedStructType::ResolveDependence(TemplateInstantiation &templInst) const {
-    return this;
-}
-
-const UndefinedStructType *UndefinedStructType::ResolveUnboundVariability(Variability v) const {
-    if (variability != Variability::Unbound)
-        return this;
-    return new UndefinedStructType(name, v, isConst, pos);
-}
-
-const UndefinedStructType *UndefinedStructType::GetAsConstType() const {
-    if (isConst)
-        return this;
-    return new UndefinedStructType(name, variability, true, pos);
-}
-
-const UndefinedStructType *UndefinedStructType::GetAsNonConstType() const {
-    if (isConst == false)
-        return this;
-    return new UndefinedStructType(name, variability, false, pos);
-}
-
-std::string UndefinedStructType::GetString() const {
-    std::string ret;
-    if (isConst)
-        ret += "const ";
-    ret += variability.GetString();
-    ret += " struct ";
-    ret += name;
-    return ret;
-}
-
-std::string UndefinedStructType::Mangle() const { return lMangleStruct(variability, isConst, name); }
-
-std::string UndefinedStructType::GetCDeclaration(const std::string &n) const {
-    std::string ret;
-    if (isConst)
-        ret += "const ";
-    ret += std::string("struct ") + name;
-    if (lShouldPrintName(n))
-        ret += std::string(" ") + n;
-    return ret;
-}
-
-llvm::Type *UndefinedStructType::LLVMType(llvm::LLVMContext *ctx) const {
-    Assert(variability != Variability::Unbound);
-    std::string mname = lMangleStructName(name, variability);
-    if (m->structTypeMap.find(mname) == m->structTypeMap.end()) {
-        Assert(m->errorCount > 0);
-        return nullptr;
-    }
-    return m->structTypeMap[mname];
-}
-
-llvm::DIType *UndefinedStructType::GetDIType(llvm::DIScope *scope) const {
-    llvm::DIFile *diFile = pos.GetDIFile();
-    llvm::DINamespace *diSpace = pos.GetDINamespace();
-    llvm::DINodeArray elements;
-    return m->diBuilder->createStructType(diSpace, GetString(), diFile,
-                                          pos.first_line,         // Line number
-                                          0,                      // Size
-                                          0,                      // Align
-                                          llvm::DINode::FlagZero, // Flags
-                                          nullptr, elements);
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // ReferenceType
@@ -3325,16 +3262,14 @@ static bool lCheckTypeEquality(const Type *a, const Type *b, bool ignoreConst) {
 
     const StructType *sta = CastType<StructType>(a);
     const StructType *stb = CastType<StructType>(b);
-    const UndefinedStructType *usta = CastType<UndefinedStructType>(a);
-    const UndefinedStructType *ustb = CastType<UndefinedStructType>(b);
-    if ((sta != nullptr || usta != nullptr) && (stb != nullptr || ustb != nullptr)) {
+    if (sta != nullptr && stb != nullptr) {
         // Report both defuned and undefined structs as equal if their
         // names are the same.
         if (a->GetVariability() != b->GetVariability())
             return false;
 
-        const std::string &namea = sta ? sta->GetStructName() : usta->GetStructName();
-        const std::string &nameb = stb ? stb->GetStructName() : ustb->GetStructName();
+        const std::string &namea = sta->GetStructName();
+        const std::string &nameb = stb->GetStructName();
         return (namea == nameb);
     }
 

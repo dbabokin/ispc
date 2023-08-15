@@ -1159,13 +1159,12 @@ struct_or_union_and_name
       {
           const Type *st = m->symbolTable->LookupType($2);
           if (st == nullptr) {
-              st = new UndefinedStructType($2, Variability::Unbound, false, @2);
+              st = new StructType($2, Variability::Unbound, false, @2);
               m->symbolTable->AddType($2, st, @2);
               $$ = st;
           }
           else {
-              if (CastType<StructType>(st) == nullptr &&
-                  CastType<UndefinedStructType>(st) == nullptr) {
+              if (CastType<StructType>(st) == nullptr) {
                   Error(@2, "Type \"%s\" is not a struct type! (%s)", $2,
                         st->GetString().c_str());
                   $$ = nullptr;
@@ -1188,9 +1187,7 @@ struct_or_union_specifier
               llvm::SmallVector<SourcePos, 8> elementPositions;
               GetStructTypesNamesPositions(*$3, &elementTypes, &elementNames,
                                            &elementPositions);
-              const std::string &name = CastType<StructType>($1) ?
-                  CastType<StructType>($1)->GetStructName() :
-                  CastType<UndefinedStructType>($1)->GetStructName();
+              const std::string &name = CastType<StructType>($1)->GetStructName();
               StructType *st = new StructType(name, elementTypes, elementNames,
                                               elementPositions, false,
                                               Variability::Unbound, false, @1);
@@ -1231,9 +1228,7 @@ struct_or_union_specifier
           llvm::SmallVector<const Type *, 8> elementTypes;
           llvm::SmallVector<std::string, 8> elementNames;
           llvm::SmallVector<SourcePos, 8> elementPositions;
-          const std::string &name = CastType<StructType>($1) ?
-              CastType<StructType>($1)->GetStructName() :
-              CastType<UndefinedStructType>($1)->GetStructName();
+          const std::string &name = CastType<StructType>($1)->GetStructName();
           StructType *st = new StructType(name, elementTypes,
                                           elementNames, elementPositions,
                                           false, Variability::Unbound, false, @1);

@@ -1853,15 +1853,15 @@ static void lGetExportedTypes(const Type *type, std::vector<const StructType *> 
         lGetExportedTypes(type->GetBaseType(), exportedStructTypes, exportedEnumTypes, exportedVectorTypes);
     else if (arrayType != nullptr)
         lGetExportedTypes(arrayType->GetElementType(), exportedStructTypes, exportedEnumTypes, exportedVectorTypes);
-    else if (structType != nullptr) {
+    else if (structType != nullptr && !structType->IsIncomplete()) {
         lAddTypeIfNew(type, exportedStructTypes);
         for (int i = 0; i < structType->GetElementCount(); ++i)
             lGetExportedTypes(structType->GetElementType(i), exportedStructTypes, exportedEnumTypes,
                               exportedVectorTypes);
-    } else if (CastType<UndefinedStructType>(type) != nullptr)
+    } else if (structType != nullptr && structType->IsIncomplete()) {
         // do nothing
         ;
-    else if (CastType<EnumType>(type) != nullptr)
+    } else if (CastType<EnumType>(type) != nullptr)
         lAddTypeIfNew(type, exportedEnumTypes);
     else if (CastType<VectorType>(type) != nullptr)
         lAddTypeIfNew(type, exportedVectorTypes);

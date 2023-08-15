@@ -52,10 +52,9 @@ enum TypeId {
     ARRAY_TYPE,              // 3
     VECTOR_TYPE,             // 4
     STRUCT_TYPE,             // 5
-    UNDEFINED_STRUCT_TYPE,   // 6
-    REFERENCE_TYPE,          // 7
-    FUNCTION_TYPE,           // 8
-    TEMPLATE_TYPE_PARM_TYPE, // 9
+    REFERENCE_TYPE,          // 6
+    FUNCTION_TYPE,           // 7
+    TEMPLATE_TYPE_PARM_TYPE, // 8
 };
 
 /** @brief Interface class that defines the type abstraction.
@@ -727,6 +726,8 @@ class StructType : public CollectionType {
                const llvm::SmallVector<std::string, 8> &eltNames, const llvm::SmallVector<SourcePos, 8> &eltPositions,
                bool isConst, Variability variability, bool isAnonymous, SourcePos pos);
 
+    StructType(const std::string &name, const Variability variability, bool isConst, SourcePos pos);
+
     Variability GetVariability() const;
 
     bool IsBoolType() const;
@@ -736,6 +737,7 @@ class StructType : public CollectionType {
     bool IsSignedType() const;
     bool IsConstType() const;
     bool IsDefined() const;
+    bool IsIncomplete() const;
 
     const Type *GetBaseType() const;
     const StructType *GetAsVaryingType() const;
@@ -805,58 +807,12 @@ class StructType : public CollectionType {
     const Variability variability;
     const bool isConst;
     const bool isAnonymous;
+    bool isIncomplete;
     const SourcePos pos;
 
     mutable llvm::SmallVector<const Type *, 8> finalElementTypes;
 
     mutable const StructType *oppositeConstStructType;
-};
-
-/** Type implementation representing a struct name that has been declared
-    but where the struct members haven't been defined (i.e. "struct Foo;").
-    This class doesn't do much besides serve as a placeholder that other
-    code can use to detect the presence of such as truct.
- */
-class UndefinedStructType : public Type {
-  public:
-    UndefinedStructType(const std::string &name, const Variability variability, bool isConst, SourcePos pos);
-
-    Variability GetVariability() const;
-
-    bool IsBoolType() const;
-    bool IsFloatType() const;
-    bool IsIntType() const;
-    bool IsUnsignedType() const;
-    bool IsSignedType() const;
-    bool IsConstType() const;
-
-    const Type *GetBaseType() const;
-    const UndefinedStructType *GetAsVaryingType() const;
-    const UndefinedStructType *GetAsUniformType() const;
-    const UndefinedStructType *GetAsUnboundVariabilityType() const;
-    const UndefinedStructType *GetAsSOAType(int width) const;
-    const UndefinedStructType *ResolveDependence(TemplateInstantiation &templInst) const;
-    const UndefinedStructType *ResolveUnboundVariability(Variability v) const;
-
-    const UndefinedStructType *GetAsConstType() const;
-    const UndefinedStructType *GetAsNonConstType() const;
-
-    std::string GetString() const;
-    std::string Mangle() const;
-    std::string GetCDeclaration(const std::string &name) const;
-
-    llvm::Type *LLVMType(llvm::LLVMContext *ctx) const;
-
-    llvm::DIType *GetDIType(llvm::DIScope *scope) const;
-
-    /** Returns the name of the structure type.  (e.g. struct Foo -> "Foo".) */
-    const std::string &GetStructName() const { return name; }
-
-  private:
-    const std::string name;
-    const Variability variability;
-    const bool isConst;
-    const SourcePos pos;
 };
 
 /** @brief Type representing a reference to another (non-reference) type.
@@ -1115,13 +1071,6 @@ template <> inline const CollectionType *CastType(const Type *type) {
 template <> inline const StructType *CastType(const Type *type) {
     if (type != nullptr && type->typeId == STRUCT_TYPE)
         return (const StructType *)type;
-    else
-        return nullptr;
-}
-
-template <> inline const UndefinedStructType *CastType(const Type *type) {
-    if (type != nullptr && type->typeId == UNDEFINED_STRUCT_TYPE)
-        return (const UndefinedStructType *)type;
     else
         return nullptr;
 }

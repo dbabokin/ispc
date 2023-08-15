@@ -239,7 +239,7 @@ class SymbolTable {
         struct definitions (where <tt>struct Foo</tt> causes type \c Foo to
         be added to the symbol table) as well as for <tt>typedef</tt>s.
         For structs with forward declarations ("struct Foo;") and are thus
-        UndefinedStructTypes, this method replaces these with an actual
+        opaque StructTypes, this method replaces these with an actual
         struct definition if one is provided.
 
         @param name Name of the type to be added
