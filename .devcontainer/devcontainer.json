@@ -2,7 +2,7 @@
   "__comment1__": "Copyright (c) 2023-2024, Intel Corporation",
   "__comment2__": "SPDX-License-Identifier: BSD-3-Clause",
   "name": "ISPC developers environment (CPU only)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu22.04",
+  "image": "mcr.microsoft.com/devcontainers/base:dev-ubuntu24.04",
   "features": {
     "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": { "packages" : "libc6-dev,libc6-dev-i386,cmake,make,flex,bison,m4,wget,libtbb-dev,libtinfo5,libncurses5-dev" },
     "ghcr.io/wxw-matt/devcontainer-features/command_runner:latest": {
