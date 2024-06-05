@@ -15,7 +15,7 @@
   },
   "remoteEnv": { "PATH": "/llvm/bin-17.0/bin:${containerEnv:PATH}" },
   "onCreateCommand": {
-    "command1": "cmake -B ${containerWorkspaceFolder}/build ${containerWorkspaceFolder}"
+    "command1": "cmake --version"
   },
   "customizations": {
     "codespaces": {
