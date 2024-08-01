@@ -303,7 +303,7 @@ jobs:
 
   mac-build:
     # This job is not capable to build on a shared runner, so need to use self-hosted.
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -339,7 +339,7 @@ jobs:
 
   mac-build-release:
     # This job is not capable to build on a shared runner, so need to use self-hosted.
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
