@@ -101,6 +101,7 @@ jobs:
         rm -rf cache.local
         tar xvf result.tar usr/local/src/llvm
         mv usr/local/src/llvm/bin-${{ inputs.version }} .
+        export XZ_DEFAULTS="-T0" # run zx in all threads
         tar cJvf llvm-${{ inputs.full_version }}-ubuntu${{ inputs.ubuntu }}-Release+Asserts${{ inputs.lto == 'ON' && '-lto' || '' }}-x86.arm.wasm.tar.xz bin-${{ inputs.version }}
 
     - name: Upload package
@@ -134,6 +135,7 @@ jobs:
         rm -rf cache.local
         tar xvf result.tar usr/local/src/llvm
         mv usr/local/src/llvm/bin-${{ inputs.version }} .
+        export XZ_DEFAULTS="-T0" # run zx in all threads
         tar cJvf llvm-${{ inputs.full_version }}-ubuntu${{ inputs.ubuntu }}-Release${{ inputs.lto == 'ON' && '-lto' || '' }}-x86.arm.wasm.tar.xz bin-${{ inputs.version }}
 
     - name: Upload package
@@ -169,6 +171,7 @@ jobs:
         rm -rf cache.local
         tar xvf result.tar usr/local/src/llvm
         mv usr/local/src/llvm/bin-${{ inputs.version }} .
+        export XZ_DEFAULTS="-T0" # run zx in all threads
         tar cJvf llvm-${{ inputs.full_version }}-ubuntu${{ inputs.ubuntu }}aarch64-Release+Asserts${{ inputs.lto == 'ON' && '-lto' || '' }}-x86.arm.wasm.tar.xz bin-${{ inputs.version }}
         rm -rf result.tar usr bin-${{ inputs.version }}
 
@@ -204,6 +207,7 @@ jobs:
         cd docker/ubuntu/${{ inputs.ubuntu }}/cpu_ispc_build
         tar xvf result.tar usr/local/src/llvm
         mv usr/local/src/llvm/bin-${{ inputs.version }} .
+        export XZ_DEFAULTS="-T0" # run zx in all threads
         tar cJvf llvm-${{ inputs.full_version }}-ubuntu${{ inputs.ubuntu }}aarch64-Release-x86${{ inputs.lto == 'ON' && '-lto' || '' }}.arm.wasm.tar.xz bin-${{ inputs.version }}
         rm -rf result.tar usr bin-${{ inputs.version }}
 
@@ -329,7 +333,8 @@ jobs:
     - name: Pack LLVM
       run: |
         cd llvm
-        tar cJvf llvm-${{ inputs.full_version }}-macos-Release+Asserts${{ inputs.lto == 'ON' && '-lto' || '' }}-universal-x86.arm.wasm.tar.xz bin-${{ inputs.version }}
+        # to run zx in all threads on macOS, we need to pass -T0 directly to xz
+        tar cf - bin-${{ inputs.version }} | xz -T0 -v > llvm-${{ inputs.full_version }}-macos-Release+Asserts${{ inputs.lto == 'ON' && '-lto' || '' }}-universal-x86.arm.wasm.tar.xz
 
     - name: Upload package
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
@@ -365,7 +370,8 @@ jobs:
     - name: Pack LLVM
       run: |
         cd llvm
-        tar cJvf llvm-${{ inputs.full_version }}-macos-Release${{ inputs.lto == 'ON' && '-lto' || '' }}-universal-x86.arm.wasm.tar.xz bin-${{ inputs.version }}
+        # to run zx in all threads on macOS, we need to pass -T0 directly to xz
+        tar cf - bin-${{ inputs.version }} | xz -T0 -v > llvm-${{ inputs.full_version }}-macos-Release${{ inputs.lto == 'ON' && '-lto' || '' }}-universal-x86.arm.wasm.tar.xz
 
     - name: Upload package
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
