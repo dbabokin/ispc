@@ -139,6 +139,21 @@ platforms, please refer to our
 [ISPC Development Guide](https://github.com/ispc/ispc/wiki/ISPC-Development-Guide)
 for build and test instructions.
 
+#### macOS
+
+On a fresh Mac, run `xcode-select --install` and complete the installation.
+Install [Homebrew](https://brew.sh/) and follow its shell setup instructions.
+From the ISPC checkout, install the prerequisites and run Quick Start with
+Homebrew's Bison and Flex ahead of the macOS versions on `PATH`.
+
+```sh
+brew install cmake bison flex
+export PATH="$(brew --prefix bison)/bin:$(brew --prefix flex)/bin:$PATH"
+python3 scripts/quick-start-build.py
+```
+
+If you build LLVM from source with the superbuild, also run `brew install ninja`.
+
 ## Additional Resources
 
 Latest `ispc` binaries corresponding to `main` branch can be downloaded from
